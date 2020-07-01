@@ -3,13 +3,13 @@ div.folha {
     height: 600px;
     border-width: medium;
     border-style: solid;
-    border-color: blue;
+    border-color: rgb(255, 174, 0);
     padding: 10px;
     margin: 20px;
 }
 
 div.localData {
-    background-color: #99FF99;
+    background-color: #ffd0fb;
     text-align: center;
     margin-bottom: 15px;
     align-self: center;
@@ -18,7 +18,7 @@ div.localData {
 
 div.saudacao {
     width: 265px;
-    background-color: #99FF99;
+    background-color: #ffd0fb;
     text-align: left;
     text-indent: 50px;
     margin-bottom: 30px;
@@ -26,7 +26,7 @@ div.saudacao {
 }
 
 div.mensagem {
-    background-color: #99FF99;
+    background-color: #ffd0fb;
     text-align: justify;
     margin-bottom: 15px;
     text-indent: 50px;
@@ -36,14 +36,14 @@ div.mensagem {
 
 div.despedida {
     width: 530px;
-    background-color: #99FF99;
+    background-color: #ffd0fb;
     margin-bottom: 15px;
     font-size: 20px;
 }
 
 div.assinatura {
     width: 530px;
-    background-color: #99FF99;
+    background-color: #ffd0fb;
     font-size: 15px;
     margin-bottom: 15px;
 }
