@@ -1,1 +1,5 @@
+Atividade da Semana - 09/05/2020 - HTML
 
+Criar um documento HTML e postar no Github, disponibilizar apenas a URL. 
+
+Procurar um animal em extinção/extinto, inserir o nome do mesmo, uma imagem e uma descrição, em baixo colocar as referências utilizadas.
