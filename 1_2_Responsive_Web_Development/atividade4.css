@@ -4,8 +4,10 @@
     box-sizing: border-box;
 }
 
-section.p{
-    height: 50%;
+.menu {
+    max-width: 940px;
+    margin: 10px;
+    padding: 1%;
 }
 
 header {
@@ -13,14 +15,14 @@ header {
     left: 0;
     top: 0;
     width: 100%;
-    padding: 10px;
-    text-align: right;
+    padding: 9px;
+    text-align: center;
     background: black;
 }
 
 header li {
     display: inline-block;
-    margin: 0 10px;
+    margin: 10px;
 }
 
 header a {
@@ -28,6 +30,10 @@ header a {
     color: white
 }
 
-    .content {
-    height: 150%;
+.conteudo {
+    height: 1500px;
+}
+
+section.content {
+    margin-top: 100px;
 }
