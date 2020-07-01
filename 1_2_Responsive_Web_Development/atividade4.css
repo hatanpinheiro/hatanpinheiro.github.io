@@ -1,1 +1,33 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
+section.p{
+    height: 50%;
+}
+
+header {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 10px;
+    text-align: right;
+    background: black;
+}
+
+header li {
+    display: inline-block;
+    margin: 0 10px;
+}
+
+header a {
+    text-decoration: none;
+    color: white
+}
+
+    .content {
+    height: 150%;
+}
