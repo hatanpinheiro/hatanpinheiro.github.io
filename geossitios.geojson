@@ -1,0 +1,492 @@
+{
+  "type": "FeatureCollection",
+  "name": "geossitios_gmuccs",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -50.0795040751225,
+          -29.19440503184236
+        ]
+      },
+      "properties": {
+        "nome": "Rio do Boi",
+        "municipio": "Praia Grande",
+        "categoria": "Geomorfologico",
+        "grau": "Nacional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -50.015147906127595,
+          -29.18577034432056
+        ]
+      },
+      "properties": {
+        "nome": "Morro dos Cabritos",
+        "municipio": "Praia Grande",
+        "categoria": "Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.98235716281107,
+          -29.188214552343748
+        ]
+      },
+      "properties": {
+        "nome": "Cachoeira Magia das Águas",
+        "municipio": "Praia Grande",
+        "categoria": "Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -50.02277730532941,
+          -29.21523874466488
+        ]
+      },
+      "properties": {
+        "nome": "Cachoeiras do Ventura",
+        "municipio": "Praia Grande",
+        "categoria": "Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.9920861403025,
+          -29.148262262385046
+        ]
+      },
+      "properties": {
+        "nome": "Canion Malacara",
+        "municipio": "Praia Grande",
+        "categoria": "Geomorfologico",
+        "grau": "Internacional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.9898303202413,
+          -29.159210672843205
+        ]
+      },
+      "properties": {
+        "nome": "Cachoeira da Onça",
+        "municipio": "Praia Grande",
+        "categoria": "Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.94969587731267,
+          -29.049320162338642
+        ]
+      },
+      "properties": {
+        "nome": "Canion Fortaleza",
+        "municipio": "Jacinto Machado",
+        "categoria": "Geomorfologico",
+        "grau": "Internacional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.94946934218775,
+          -29.012865936130403
+        ]
+      },
+      "properties": {
+        "nome": "Canion da Pedra",
+        "municipio": "Jacinto Machado",
+        "categoria": "Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.93100522263222,
+          -29.067015192652242
+        ]
+      },
+      "properties": {
+        "nome": "Morro Carasal",
+        "municipio": "Jacinto Machado",
+        "categoria": "Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.91758488361886,
+          -29.015275291215954
+        ]
+      },
+      "properties": {
+        "nome": "Cachoeira do Zelindo",
+        "municipio": "Jacinto Machado",
+        "categoria": "Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.740161466978456,
+          -29.023241037161377
+        ]
+      },
+      "properties": {
+        "nome": "Morro Itambe",
+        "municipio": "Jacinto Machado",
+        "categoria": "Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.99184697367065,
+          -29.068205742525247
+        ]
+      },
+      "properties": {
+        "nome": "Cânion Fortaleza 2",
+        "municipio": "Cambará do Sul",
+        "categoria": "Geomorfológico",
+        "grau": "Internacional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.91562278377343,
+          -28.829033356543366
+        ]
+      },
+      "properties": {
+        "nome": "Cachoeira Cortina",
+        "municipio": "Timbe do Sul",
+        "categoria": "Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.79146252851279,
+          -28.82501064496295
+        ]
+      },
+      "properties": {
+        "nome": "Fenda da Raia",
+        "municipio": "Timbe do Sul",
+        "categoria": "Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.907633380456225,
+          -28.85603577159943
+        ]
+      },
+      "properties": {
+        "nome": "Cascata do Padre",
+        "municipio": "Timbe do Sul",
+        "categoria": "Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.796633796155525,
+          -28.820578123310682
+        ]
+      },
+      "properties": {
+        "nome": "Paredão da Areia Branca",
+        "municipio": "Timbe do Sul",
+        "categoria": "Geomorfologico e Estratigrafico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.89620317652419,
+          -28.7724043743343
+        ]
+      },
+      "properties": {
+        "nome": "Toca do Tatu",
+        "municipio": "Timbe do Sul",
+        "categoria": "Paleontologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.75699640831359,
+          -28.82927163018063
+        ]
+      },
+      "properties": {
+        "nome": "Cachoeiras do Rio do Salto",
+        "municipio": "Timbe do Sul",
+        "categoria": "Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.77145132348179,
+          -28.710010250486807
+        ]
+      },
+      "properties": {
+        "nome": "Cachoeira do Bizungo",
+        "municipio": "Morro Grande",
+        "categoria": "Estratigrafico e Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.75664295421022,
+          -28.661084521859475
+        ]
+      },
+      "properties": {
+        "nome": "Paleotoca da Aparência",
+        "municipio": "Morro Grande",
+        "categoria": "Paleontologico e Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.78808589914087,
+          -28.688770404636852
+        ]
+      },
+      "properties": {
+        "nome": "Furnas Xokleng",
+        "municipio": "Morro Grande",
+        "categoria": "Paleontologico e Geomorfologico",
+        "grau": "Internacional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.66888796687032,
+          -28.77847815474066
+        ]
+      },
+      "properties": {
+        "nome": "Mineracao Angelgres",
+        "municipio": "Morro Grande",
+        "categoria": "Paleontologico e Estratigrafico",
+        "grau": "Nacional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.74714383233592,
+          -28.68889395987074
+        ]
+      },
+      "properties": {
+        "nome": "Cachoeira do Tatu",
+        "municipio": "Morro Grande",
+        "categoria": "Geomorfologico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -50.08597678881666,
+          -29.161407596774094
+        ]
+      },
+      "properties": {
+        "nome": "Cânion Itaimbezinho",
+        "municipio": "Cambará do Sul",
+        "categoria": "Geomorfológico",
+        "grau": "Internacional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.87156111110696,
+          -29.031711111554564
+        ]
+      },
+      "properties": {
+        "nome": "Paletoca Índios Xocleng",
+        "municipio": "Jacinto Machado",
+        "categoria": "Paleontológico",
+        "grau": "Internacional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.98838747359864,
+          -29.293715353496477
+        ]
+      },
+      "properties": {
+        "nome": "Cachoeira dos Borges",
+        "municipio": "Mampituba",
+        "categoria": "Geomorfologico e estratigrafico",
+        "grau": "Regional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.969439220302846,
+          -29.2146866459897
+        ]
+      },
+      "properties": {
+        "nome": "Santuário Nossa Senhora Aparecida",
+        "municipio": "Mampituba",
+        "categoria": "Geológico",
+        "grau": "Nacional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.735473832092346,
+          -29.357905259619656
+        ]
+      },
+      "properties": {
+        "nome": "Parque da Guarita e Morro do Farol",
+        "municipio": "Torres",
+        "categoria": "Geológico e Geomorfológico",
+        "grau": "Internacional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.75250932038109,
+          -29.36317657352957
+        ]
+      },
+      "properties": {
+        "nome": "Dunas de Itapeva",
+        "municipio": "Torres",
+        "categoria": "Geomorfologico",
+        "grau": "Nacional"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -49.704391535587405,
+          -29.346951314227155
+        ]
+      },
+      "properties": {
+        "nome": "Ilha dos Lobos",
+        "municipio": "Torres",
+        "categoria": "Geomorfologico",
+        "grau": "Nacional"
+      }
+    }
+  ]
+}

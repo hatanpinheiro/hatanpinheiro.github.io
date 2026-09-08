@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diagrama Arquitetural — Web GIS Geoparque Caminhos dos Cânions do Sul</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+  <style>
+    :root {
+      --gmuccs-green: #0A6B3D;
+      --gmuccs-green-light: #129155;
+      --gmuccs-lime: #C9D200;
+      --gmuccs-blue: #00A3DA;
+      --gmuccs-ochre: #B87319;
+      --unesco-blue: #0072CE;
+      --bg-dark: #04140d;
+      --bg-card: rgba(6, 28, 18, 0.85);
+      --border-subtle: rgba(18, 145, 85, 0.3);
+      --border-bright: rgba(201, 210, 0, 0.5);
+      --text-main: #f0fdf4;
+      --text-muted: #86efac;
+      --text-dim: #4ade80;
+      --font-display: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-body: 'Space Grotesk', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      padding: 40px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(10, 107, 61, 0.3), transparent),
+        radial-gradient(circle at 80% 80%, rgba(0, 163, 218, 0.15), transparent);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 24px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-badge {
+      width: 48px;
+      height: 48px;
+      background: rgba(6, 28, 18, 0.9);
+      border: 1.5px solid var(--border-bright);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      box-shadow: 0 0 20px rgba(18, 145, 85, 0.3);
+    }
+
+    .title-group h1 {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .title-group p {
+      font-size: 13px;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(10, 107, 61, 0.2);
+      border: 1px solid var(--gmuccs-green-light);
+      color: var(--text-main);
+      padding: 10px 18px;
+      border-radius: 9999px;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .back-btn:hover {
+      background: var(--gmuccs-green-light);
+      transform: translateY(-1px);
+      box-shadow: 0 0 16px rgba(18, 145, 85, 0.4);
+    }
+
+    /* Diagram Flow */
+    .flow-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+    }
+
+    /* Layer Section */
+    .layer-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 22px 28px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+    }
+
+    .layer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .layer-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .layer-tag-1 { background: rgba(18, 145, 85, 0.2); color: #4ade80; border: 1px solid #129155; }
+    .layer-tag-2 { background: rgba(201, 210, 0, 0.2); color: var(--gmuccs-lime); border: 1px solid var(--gmuccs-lime); }
+    .layer-tag-3 { background: rgba(0, 163, 218, 0.2); color: #38bdf8; border: 1px solid var(--gmuccs-blue); }
+    .layer-tag-4 { background: rgba(184, 115, 25, 0.2); color: #fbbf24; border: 1px solid var(--gmuccs-ochre); }
+    .layer-tag-5 { background: rgba(0, 114, 206, 0.2); color: #60a5fa; border: 1px solid var(--unesco-blue); }
+
+    .layer-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* Blocks Grid */
+    .blocks-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+    .block-box {
+      background: rgba(4, 18, 12, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .block-box:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .block-icon {
+      font-size: 20px;
+    }
+
+    .block-title {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .block-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .block-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--gmuccs-lime);
+      background: rgba(201, 210, 0, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      width: fit-content;
+      margin-top: 4px;
+    }
+
+    /* Downward Connector Arrow */
+    .connector-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gmuccs-lime);
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .connector-arrow svg {
+      animation: bounce 1.8s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(4px); }
+    }
+
+    @media (max-width: 900px) {
+      .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .header { flex-direction: column; align-items: flex-start; gap: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="brand-group">
+        <div class="logo-badge">
+          <svg width="34" height="34" viewBox="0 0 100 100" fill="none">
+            <path d="M 50 10 A 40 40 0 0 1 85 30" stroke="#C9D200" stroke-width="12" stroke-linecap="round"/>
+            <path d="M 85 30 A 40 40 0 0 0 20 28 L 20 50 L 32 50 L 32 72 A 18 18 0 0 0 68 72 L 68 50 L 80 50" stroke="#0A6B3D" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M 68 55 Q 82 48, 92 64 Q 96 72, 102 70" stroke="#00A3DA" stroke-width="9" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="title-group">
+          <h1>Diagrama Arquitetural da Ferramenta</h1>
+          <p>Web GIS • Geoparque Mundial da UNESCO Caminhos dos Cânions do Sul</p>
+        </div>
+      </div>
+
+      <a href="index.html" class="back-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Voltar ao Mapa
+      </a>
+    </header>
+
+    <!-- Diagram Pipeline Flow -->
+    <div class="flow-wrapper">
+
+      <!-- CAMADA 1 -->
+      <section class="layer-card">
+        <div class="layer-header">
+          <div class="layer-tag layer-tag-1">CAMADA 01</div>
+          <div class="layer-title">Fontes de Dados & Ingestão Primária</div>
+        </div>
+        <div class="blocks-grid grid-3">
+          <div class="block-box">
+            <div class="block-icon">📁</div>
+            <div class="block-title">GeoPackage Oficial (.gpkg)</div>
+            <div class="block-desc">30 geossítios catalogados pelo geoparque em formato vetorial OGC, com coordenadas em SIRGAS 2000 / UTM Zona 22S.</div>
+            <div class="block-tag">EPSG:31982</div>
+          </div>
+          <div class="block-box">
+            <div class="block-icon">🏛️</div>
+            <div class="block-title">API Malhas IBGE v3</div>
+            <div class="block-desc">Polígonos vetoriais oficiais dos 7 municípios consorciados (Praia Grande, Jacinto Machado, Timbé, Morro Grande, Cambará, Mampituba, Torres).</div>
+            <div class="block-tag">GeoJSON WGS84</div>
+          </div>
+          <div class="block-box">
+            <div class="block-icon">🌐</div>
+            <div class="block-title">Portal Oficial canionsdosul.org</div>
+            <div class="block-desc">Identidade visual oficial, logotipo vetorial e códigos hexadecimais de marca (#0A6B3D, #C9D200, #00A3DA, #B87319).</div>
+            <div class="block-tag">Identidade Visual</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Connector 1 -> 2 -->
+      <div class="connector-arrow">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <polyline points="19 12 12 19 5 12"></polyline>
+        </svg>
+        Extração, Reprojeção e Enriquecimento
+      </div>
+
+      <!-- CAMADA 2 -->
+      <section class="layer-card">
+        <div class="layer-header">
+          <div class="layer-tag layer-tag-2">CAMADA 02</div>
+          <div class="layer-title">Processamento Espacial (ETL) & Módulo Consolidado</div>
+        </div>
+        <div class="blocks-grid grid-3">
+          <div class="block-box">
+            <div class="block-icon">🌐</div>
+            <div class="block-title">Transformação de Coordenadas</div>
+            <div class="block-desc">Conversão matemática das coordenadas projetadas métricas (SIRGAS 2000 UTM 22S) para coordenadas elipsoidais WGS84.</div>
+            <div class="block-tag">EPSG:31982 ➔ EPSG:4326</div>
+          </div>
+          <div class="block-box">
+            <div class="block-icon">🌋</div>
+            <div class="block-title">Enriquecimento Geológico</div>
+            <div class="block-desc">Associação com a Formação Serra Geral (basaltos), Formação Botucatu (arenitos), Rio do Rasto (fósseis), altitudes e contexto.</div>
+            <div class="block-tag">30 Geossítios Enriquecidos</div>
+          </div>
+          <div class="block-box">
+            <div class="block-icon">📦</div>
+            <div class="block-title">data.js (Módulo Autônomo)</div>
+            <div class="block-desc">Empacotamento completo de geossítios e polígonos municipais em módulo JS nativo offline, dispensando dependências de banco de dados.</div>
+            <div class="block-tag">JSON Integrado</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Connector 2 -> 3 -->
+      <div class="connector-arrow">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <polyline points="19 12 12 19 5 12"></polyline>
+        </svg>
+        Alimentação do Motor de Aplicação
+      </div>
+
+      <!-- CAMADA 3 -->
+      <section class="layer-card">
+        <div class="layer-header">
+          <div class="layer-tag layer-tag-3">CAMADA 03</div>
+          <div class="layer-title">Motor Cartográfico & Lógica de Negócio (app.js)</div>
+        </div>
+        <div class="blocks-grid grid-4">
+          <div class="block-box">
+            <div class="block-icon">⚡</div>
+            <div class="block-title">Filtros Reativos</div>
+            <div class="block-desc">Cruzamento em tempo real de filtros por Grau (Inter, Nac, Reg), Categoria geológica, Município e Busca textual.</div>
+            <div class="block-tag">Engine Reativa</div>
+          </div>
+          <div class="block-box">
+            <div class="block-icon">📐</div>
+            <div class="block-title">Motor Haversine</div>
+            <div class="block-desc">Cálculo contínuo das distâncias geodésicas em km entre o geossítio em foco e seus vizinhos mais próximos.</div>
+            <div class="block-tag">Proximidade em km</div>
+          </div>
+          <div class="block-box">
+            <div class="block-icon">✨</div>
+            <div class="block-title">Canvas Ray Network</div>
+            <div class="block-desc">Renderização em 60 FPS de curvas de Bézier dinâmicas e fótons luminosos viajantes conectando nós da rede (Lowy style).</div>
+            <div class="block-tag">HTML5 Canvas Overlay</div>
+          </div>
+          <div class="block-box">
+            <div class="block-icon">🧭</div>
+            <div class="block-title">Conversor UTM Live</div>
+            <div class="block-desc">Conversão trigonométrica contínua da posição do cursor do mouse em coordenadas projetadas métricas oficiais.</div>
+            <div class="block-tag">UTM Zona 22S</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Connector 3 -> 4 -->
+      <div class="connector-arrow">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <polyline points="19 12 12 19 5 12"></polyline>
+        </svg>
+        Renderização Cartográfica & Visual
+      </div>
+
+      <!-- CAMADA 4 -->
+      <section class="layer-card">
+        <div class="layer-header">
+          <div class="layer-tag layer-tag-4">CAMADA 04</div>
+          <div class="layer-title">Mapas Base & Provedores Cartográficos (Sem Marcas d'Água)</div>
+        </div>
+        <div class="blocks-grid grid-3">
+          <div class="block-box">
+            <div class="block-icon">🌑</div>
+            <div class="block-title">ESRI Dark Gray Canvas</div>
+            <div class="block-desc">Base cartográfica escura profissional e limpa, 100% livre de marcas d'água, perfeitamente integrada ao modo noturno.</div>
+            <div class="block-tag">Modo Escuro</div>
+          </div>
+          <div class="block-box">
+            <div class="block-icon">🏔️</div>
+            <div class="block-title">ESRI World Topographic</div>
+            <div class="block-desc">Base topográfica para o Modo Claro evidenciando o relevo sombreado dos cânions, escarpas, curvas de nível e rede hidrográfica.</div>
+            <div class="block-tag">Modo Claro</div>
+          </div>
+          <div class="block-box">
+            <div class="block-icon">🛰️</div>
+            <div class="block-title">ESRI World Imagery</div>
+            <div class="block-desc">Mosaico de satélite óptico de alta resolução para visualização geomorfológica direta das paredes rochosas e cânions.</div>
+            <div class="block-tag">Visão Satélite</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Connector 4 -> 5 -->
+      <div class="connector-arrow">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <polyline points="19 12 12 19 5 12"></polyline>
+        </svg>
+        Interação do Usuário & Experiência
+      </div>
+
+      <!-- CAMADA 5 -->
+      <section class="layer-card">
+        <div class="layer-header">
+          <div class="layer-tag layer-tag-5">CAMADA 05</div>
+          <div class="layer-title">Interface do Usuário (HUD Analítico • Estilo Lowy Institute)</div>
+        </div>
+        <div class="blocks-grid grid-4">
+          <div class="block-box">
+            <div class="block-icon">🔝</div>
+            <div class="block-title">Topo Temático</div>
+            <div class="block-desc">Logotipo vetorial oficial GMUCCS, abas de navegação, alternador de temas Claro/Escuro e chancela UNESCO 2022–2026.</div>
+            <div class="block-tag">Header Nav</div>
+          </div>
+          <div class="block-box">
+            <div class="block-icon">📊</div>
+            <div class="block-title">Painel HUD Analítico</div>
+            <div class="block-desc">KPIs em tempo real (Total: 30, Inter: 7, Nac: 5, Reg: 18), seletor de municípios e 5 modos da rede de conexão.</div>
+            <div class="block-tag">HUD Dashboard</div>
+          </div>
+          <div class="block-box">
+            <div class="block-icon">🎯</div>
+            <div class="block-title">Radar & Callout HUD</div>
+            <div class="block-desc">3 anéis concêntricos de radar pulsante e caixa callout angular com linha guia conectada ao geossítio em foco.</div>
+            <div class="block-tag">Foco Dinâmico</div>
+          </div>
+          <div class="block-box">
+            <div class="block-icon">📑</div>
+            <div class="block-title">Ficha Técnica Geológica</div>
+            <div class="block-desc">Detalhes científicos com formação rochosa, altitude, coordenadas e lista de geossítios vizinhos com cálculo de distâncias.</div>
+            <div class="block-tag">Ficha Completa</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </div>
+
+</body>
+</html>

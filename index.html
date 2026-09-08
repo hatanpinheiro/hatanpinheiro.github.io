@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geoparque Caminhos dos Cânions do Sul | Web GIS & Inventário de Geossítios</title>
+  <meta name="description" content="Webmap interativo dos 30 geossítios do Geoparque Mundial da UNESCO Caminhos dos Cânions do Sul com conexões em rede, filtros temáticos e dados geológicos.">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Application CSS -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Branded Favicon -->
+  <link rel="icon" type="image/png" href="assets/emblema_geoparque.png">
+</head>
+<body>
+
+  <div id="app-container">
+
+    <!-- ====================================================================
+         TOP NAVIGATION BAR (LOWY INSTITUTE STYLE)
+         ==================================================================== -->
+    <header id="top-nav">
+      <div class="brand-section">
+        <img src="assets/logo_geoparque.png" alt="Geoparque Mundial da UNESCO Caminhos dos Cânions do Sul" class="brand-logo-img" title="Geoparque Mundial da UNESCO Caminhos dos Cânions do Sul">
+        <span class="brand-badge-unesco">GEOPARQUE MUNDIAL DA UNESCO</span>
+      </div>
+
+      <nav>
+        <ul class="nav-tabs">
+          <li><button class="nav-tab-btn active" data-tab="rede" id="tab-rede">Mapa da Rede</button></li>
+          <li><button class="nav-tab-btn" data-tab="municipios" id="tab-municipios">Municípios</button></li>
+          <li><button class="nav-tab-btn" data-tab="tipologia" id="tab-tipologia">Conteúdo</button></li>
+          <li><button class="nav-tab-btn" data-tab="relevancia" id="tab-relevancia">Relevância</button></li>
+          <li><button class="nav-tab-btn" data-tab="sobre" id="tab-sobre">Sobre o Geoparque</button></li>
+        </ul>
+      </nav>
+
+      <div class="header-actions">
+        <div class="status-unesco-pill" title="Certificação Oficial UNESCO Global Geoparks">
+          <span class="status-dot"></span>
+          UNESCO 2022–2026
+        </div>
+        
+        <button class="header-icon-btn" id="btn-toggle-rays" title="Alternar Feixes da Rede (Lowy Style)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="6" r="3"></circle>
+            <circle cx="18" cy="18" r="3"></circle>
+            <line x1="8.59" y1="8.59" x2="15.42" y2="15.42"></line>
+            <circle cx="18" cy="6" r="3"></circle>
+            <line x1="15.41" y1="8.59" x2="8.59" y2="15.42"></line>
+          </svg>
+        </button>
+
+        <button class="header-icon-btn" id="btn-info" title="Informações do Geoparque">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+        </button>
+
+        <button class="header-icon-btn" id="btn-diagram" title="Diagrama da Ferramenta & Arquitetura">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+            <line x1="10" y1="6.5" x2="14" y2="6.5"></line>
+            <line x1="6.5" y1="10" x2="6.5" y2="14"></line>
+            <line x1="17.5" y1="10" x2="17.5" y2="14"></line>
+            <line x1="10" y1="17.5" x2="14" y2="17.5"></line>
+          </svg>
+        </button>
+
+        <button class="header-icon-btn" id="btn-fullscreen" title="Tela Cheia">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <polyline points="9 21 3 21 3 15"></polyline>
+            <line x1="21" y1="3" x2="14" y2="10"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ====================================================================
+         MAP AND CANVAS OVERLAYS
+         ==================================================================== -->
+    <main id="map-wrapper">
+      <div id="map"></div>
+      <canvas id="network-canvas"></canvas>
+      <div id="hud-callout-layer"></div>
+    </main>
+
+    <!-- Trigger to collapse/expand left HUD panel -->
+    <button id="panel-toggle-btn" title="Ocultar/Expandir Painel HUD">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+
+    <!-- ====================================================================
+         LEFT HUD ANALYTICS PANEL
+         ==================================================================== -->
+    <aside id="hud-panel">
+      <div class="panel-header">
+        <div class="panel-tagline">INVENTÁRIO DO GEOPATRIMÔNIO</div>
+        <h1 class="panel-title">Geossítios do Geoparque</h1>
+        <p class="panel-subtitle">Santa Catarina & Rio Grande do Sul • Brasil</p>
+      </div>
+
+      <div class="panel-body">
+        
+        <!-- KPI METRICS (LOWY STYLE) -->
+        <div class="kpi-grid">
+          <div class="kpi-card active" data-filter-grau="todos" title="Mostrar todos os geossítios">
+            <div class="kpi-number" id="kpi-total">30</div>
+            <div class="kpi-label">Total</div>
+          </div>
+          <div class="kpi-card" data-type="internacional" data-filter-grau="Internacional" title="Filtrar por Relevância Internacional">
+            <div class="kpi-number" id="kpi-inter">7</div>
+            <div class="kpi-label">Internacional</div>
+          </div>
+          <div class="kpi-card" data-type="nacional" data-filter-grau="Nacional" title="Filtrar por Relevância Nacional">
+            <div class="kpi-number" id="kpi-nac">5</div>
+            <div class="kpi-label">Nacional</div>
+          </div>
+          <div class="kpi-card" data-type="regional" data-filter-grau="Regional" title="Filtrar por Relevância Regional">
+            <div class="kpi-number" id="kpi-reg">18</div>
+            <div class="kpi-label">Regional</div>
+          </div>
+        </div>
+
+        <!-- SEARCH BAR -->
+        <div class="search-wrapper">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="search-input" class="search-input" placeholder="Buscar por nome, cânion, fóssil ou município..." autocomplete="off">
+        </div>
+
+        <!-- FILTROS POR MUNICÍPIO -->
+        <div class="control-section">
+          <div class="section-label-row">
+            <span class="section-label">Território / Município</span>
+            <span class="section-badge" id="muni-badge">7 Cidades</span>
+          </div>
+          <select id="select-municipio" class="custom-select">
+            <option value="todos">Todos os Municípios (SC & RS)</option>
+            <option value="Praia Grande">Praia Grande (SC) — 6 Geossítios</option>
+            <option value="Jacinto Machado">Jacinto Machado (SC) — 6 Geossítios</option>
+            <option value="Timbé do Sul">Timbé do Sul (SC) — 6 Geossítios</option>
+            <option value="Morro Grande">Morro Grande (SC) — 5 Geossítios</option>
+            <option value="Cambará do Sul">Cambará do Sul (RS) — 2 Geossítios</option>
+            <option value="Torres">Torres (RS) — 3 Geossítios</option>
+            <option value="Mampituba">Mampituba (RS) — 2 Geossítios</option>
+          </select>
+        </div>
+
+        <!-- FILTROS POR CONTEÚDO -->
+        <div class="control-section">
+          <div class="section-label-row">
+            <span class="section-label">Conteúdo</span>
+            <span class="section-badge" id="tipo-badge">Todas</span>
+          </div>
+          <div class="pill-group" id="tipo-pill-group">
+            <button class="pill-btn active" data-categoria="todas">Todas</button>
+            <button class="pill-btn" data-categoria="Geomorfológico">Geomorfológico</button>
+            <button class="pill-btn" data-categoria="Paleontológico">Paleontológico</button>
+            <button class="pill-btn" data-categoria="Estratigráfico">Estratigráfico</button>
+            <button class="pill-btn" data-categoria="Geológico">Geológico</button>
+          </div>
+        </div>
+
+        <!-- MODO DA REDE DE RAIOS (LOWY STYLE) -->
+        <div class="control-section">
+          <div class="section-label-row">
+            <span class="section-label">Modo da Rede de Conexões</span>
+            <span class="section-badge">Raios Vetoriais</span>
+          </div>
+          <div class="pill-group" id="network-mode-group">
+            <button class="pill-btn active" data-net-mode="municipio" title="Conectar geossítios do mesmo município">Por Município</button>
+            <button class="pill-btn" data-net-mode="categoria" title="Conectar geossítios do mesmo conteúdo">Por Conteúdo</button>
+            <button class="pill-btn" data-net-mode="grau" title="Conectar geossítios do mesmo grau de relevância">Por Relevância</button>
+            <button class="pill-btn" data-net-mode="proximidade" title="Conectar aos 5 geossítios mais próximos">Por Proximidade</button>
+            <button class="pill-btn" data-net-mode="constelacao" title="Conectar todos os nós da rede">Constelação</button>
+          </div>
+        </div>
+
+        <!-- TOGGLE SWITCHES -->
+        <div class="control-section">
+          <div class="section-label-row">
+            <span class="section-label">Camadas Cartográficas</span>
+          </div>
+          <div class="toggles-grid">
+            <label class="hud-toggle-card">
+              <div class="toggle-info">
+                <span class="toggle-title">Raios da Rede</span>
+                <span class="toggle-desc">Feixes neon interativos</span>
+              </div>
+              <div class="switch">
+                <input type="checkbox" id="toggle-network-rays" checked>
+                <span class="slider"></span>
+              </div>
+            </label>
+
+            <label class="hud-toggle-card">
+              <div class="toggle-info">
+                <span class="toggle-title">Limites IBGE</span>
+                <span class="toggle-desc">Polígonos dos 7 municípios</span>
+              </div>
+              <div class="switch">
+                <input type="checkbox" id="toggle-boundaries" checked>
+                <span class="slider"></span>
+              </div>
+            </label>
+
+            <label class="hud-toggle-card">
+              <div class="toggle-info">
+                <span class="toggle-title">Radar Pulsante</span>
+                <span class="toggle-desc">Anéis de foco no nó ativo</span>
+              </div>
+              <div class="switch">
+                <input type="checkbox" id="toggle-radar" checked>
+                <span class="slider"></span>
+              </div>
+            </label>
+
+            <label class="hud-toggle-card">
+              <div class="toggle-info">
+                <span class="toggle-title">Callout HUD</span>
+                <span class="toggle-desc">Linha guia de rótulo</span>
+              </div>
+              <div class="switch">
+                <input type="checkbox" id="toggle-callout" checked>
+                <span class="slider"></span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- ACTIVE GEOSITE DETAIL CARD (HUB DETAIL) -->
+        <div class="control-section">
+          <div class="section-label-row">
+            <span class="section-label">Geossítio em Foco</span>
+            <span class="section-badge" id="focus-id">ID #24</span>
+          </div>
+          
+          <article class="detail-card" id="detail-card">
+            <header class="detail-header">
+              <h2 class="detail-name" id="detail-name">Cânion Itaimbezinho</h2>
+              <span class="detail-badge-grau badge-internacional" id="detail-grau">Internacional</span>
+            </header>
+
+            <!-- ESPAÇO PARA A FOTOGRAFIA DO GEOSSÍTIO -->
+            <div class="detail-photo-frame" id="detail-photo-frame" title="Fotografia do Geossítio">
+              <img id="detail-photo" class="detail-photo-img" src="assets/id24.png" alt="Fotografia do Geossítio Cânion Itaimbezinho">
+              <div class="detail-photo-overlay">
+                <span class="photo-id-tag" id="photo-id-tag">ID #24</span>
+                <span class="photo-caption" id="photo-caption">Cânion Itaimbezinho</span>
+              </div>
+            </div>
+
+            <div class="detail-meta-grid">
+              <div class="meta-item">
+                <span class="meta-label">Município</span>
+                <span class="meta-value" id="detail-muni">Cambará do Sul (RS)</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Conteúdo</span>
+                <span class="meta-value" id="detail-tipo">Geomorfológico</span>
+              </div>
+              <div class="meta-item meta-item-full">
+                <span class="meta-label">Formação Geológica</span>
+                <span class="meta-value" id="detail-formacao" title="Formação Serra Geral">Formação Serra Geral</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Altitude</span>
+                <span class="meta-value" id="detail-altitude">940 m / 220 m</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Coordenadas WGS84</span>
+                <span class="meta-value" id="detail-coords">-29.1614°, -50.0860°</span>
+              </div>
+            </div>
+
+            <p class="detail-desc" id="detail-desc">
+              O mais célebre cânion do Brasil e epicentro do Parque Nacional de Aparados da Serra. Fenda monumental de quase 6 km de comprimento com paredes perfeitamente esculpidas em dezenas de derrames vulcânicos superpostos.
+            </p>
+
+            <div class="detail-proximity">
+              <span class="proximity-title">Geossítios Conectados Mais Próximos</span>
+              <div class="proximity-list" id="proximity-list">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <div class="detail-actions">
+              <button class="btn-primary" id="btn-center-geosite">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="2"></circle>
+                </svg>
+                Centralizar no Mapa
+              </button>
+            </div>
+          </article>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- ====================================================================
+         FLOATING MAP TOOLBAR (RIGHT)
+         ==================================================================== -->
+    <div id="floating-toolbar">
+      <div class="tool-group">
+        <button class="tool-btn" id="btn-zoom-in" title="Aproximar Zoom">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+        <button class="tool-btn" id="btn-zoom-out" title="Afastar Zoom">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+        </button>
+        <button class="tool-btn" id="btn-fit-bounds" title="Ajustar aos Limites do Geoparque">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="tool-group">
+        <button class="tool-btn active" id="btn-layer-light" title="Mapa Base: Claro Minimalista (Canvas)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+        <button class="tool-btn" id="btn-layer-topo" title="Mapa Base: Relevo & Topografia (Esri)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+            <line x1="8" y1="2" x2="8" y2="18"></line>
+            <line x1="16" y1="6" x2="16" y2="22"></line>
+          </svg>
+        </button>
+        <button class="tool-btn" id="btn-layer-sat" title="Mapa Base: Satélite / Híbrido">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         BOTTOM STATUS BAR
+         ==================================================================== -->
+    <footer id="bottom-bar">
+      <div class="coords-live">
+        <div class="coord-group">
+          <span class="coord-label">LAT:</span>
+          <span class="coord-val" id="val-lat">-29.1614°</span>
+        </div>
+        <div class="coord-group">
+          <span class="coord-label">LON:</span>
+          <span class="coord-val" id="val-lon">-50.0860°</span>
+        </div>
+        <div class="coord-group">
+          <span class="coord-label">UTM 22S:</span>
+          <span class="coord-val" id="val-utm">588889 E, 6773786 N</span>
+        </div>
+      </div>
+
+      <div class="status-middle">
+        EXIBINDO <span id="val-visible-count">30</span> DE 30 GEOSSÍTIOS
+      </div>
+
+      <div class="status-right">
+        <span>GEOPARQUE MUNDIAL DA UNESCO</span>
+        <span>•</span>
+        <span>IBGE & GMUCCS 2026</span>
+      </div>
+    </footer>
+
+    <!-- ====================================================================
+         MODAL DIALOG (SOBRE O GEOPARQUE)
+         ==================================================================== -->
+    <div class="modal-backdrop" id="modal-sobre">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <img src="assets/emblema_geoparque.png" alt="Emblema Geoparque" class="modal-logo-img">
+            <h3 class="modal-title">Geoparque Mundial da UNESCO Caminhos dos Cânions do Sul</h3>
+          </div>
+          <button class="modal-close-btn" id="modal-close" title="Fechar">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-highlight-box">
+            Reconhecido oficialmente como <strong>Geoparque Mundial da UNESCO</strong> em abril de 2022, o território abrange 2.830 km² distribuídos entre os estados de Santa Catarina e Rio Grande do Sul.
+          </div>
+          
+          <p>
+            O geoparque destaca-se pela mais impressionante concentração de cânions e desfiladeiros verticais do Brasil, esculpidos pela erosão fluvial e recuo da escarpa da Serra Geral (Aparados da Serra), cujos paredões atingem até 1.000 metros de desnível vertical.
+          </p>
+
+          <p>
+            <strong>Patrimônio Geológico Singular:</strong> A história rochosa remonta à fragmentação do supercontinente Gondwana há 135 milhões de anos, quando um dos maiores eventos vulcânicos da Terra cobriu os campos de dunas do Deserto Botucatu com sucessivos derrames basálticos da Formação Serra Geral.
+          </p>
+
+          <p>
+            <strong>Patrimônio Paleontológico:</strong> O território abriga dezenas de <em>paleotocas</em> — túneis subterrâneos escavados há milhares de anos pela megafauna pleistocênica extinta (como preguiças-gigantes e tatus-gigantes), com marcas de garras perfeitamente preservadas nas paredes de arenito.
+          </p>
+
+          <p>
+            <strong>Municípios Consorciados:</strong> Praia Grande (SC), Jacinto Machado (SC), Timbé do Sul (SC), Morro Grande (SC), Cambará do Sul (RS), Mampituba (RS) e Torres (RS).
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL DIALOG (DIAGRAMA DA FERRAMENTA)
+         ==================================================================== -->
+    <div class="modal-backdrop" id="modal-diagrama">
+      <div class="modal-dialog modal-dialog-wide">
+        <div class="modal-header">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <img src="assets/emblema_geoparque.png" alt="Emblema Geoparque" class="modal-logo-img">
+            <h3 class="modal-title">Diagrama Arquitetural da Ferramenta Web GIS</h3>
+          </div>
+          <button class="modal-close-btn" id="modal-diagram-close" title="Fechar">&times;</button>
+        </div>
+        <div class="modal-body">
+          
+          <div class="modal-highlight-box">
+            Arquitetura do sistema do <strong>Webmap dos Geossítios do GMUCCS</strong>: da ingestão e reprojeção de dados espaciais até a renderização de feixes vetoriais em Canvas e interface HUD inspirada no <em>Lowy Institute Global Diplomacy Index</em>.
+          </div>
+
+          <!-- Interactive Visual Diagram Cards -->
+          <div class="arch-diagram-grid">
+            
+            <!-- Etapa 1 -->
+            <div class="arch-card">
+              <div class="arch-card-badge">ETAPA 01</div>
+              <h4 class="arch-card-title">Fontes de Dados</h4>
+              <ul class="arch-card-list">
+                <li><strong>GMUCCS_camadas_geossitios.gpkg</strong>: 30 geossítios oficiais em EPSG:31982 (SIRGAS 2000 UTM 22S).</li>
+                <li><strong>API Malhas IBGE v3</strong>: Polígonos vetoriais dos 7 municípios consorciados de SC e RS.</li>
+                <li><strong>canionsdosul.org</strong>: Identidade visual oficial, logotipo vetorial e códigos HEX (#0A6B3D, #C9D200, #00A3DA, #B87319).</li>
+              </ul>
+            </div>
+
+            <!-- Etapa 2 -->
+            <div class="arch-card">
+              <div class="arch-card-badge">ETAPA 02</div>
+              <h4 class="arch-card-title">ETL & Enriquecimento</h4>
+              <ul class="arch-card-list">
+                <li><strong>Reprojeção Cartográfica</strong>: Conversão de coordenadas métricas UTM 22S para WGS84 (EPSG:4326).</li>
+                <li><strong>Enriquecimento Geológico</strong>: Adição de formações (Serra Geral, Botucatu, Rio do Rasto), altitudes e narrativas científicas.</li>
+                <li><strong>data.js</strong>: Empacotamento JSON autônomo offline, dispensando dependências de banco de dados externo.</li>
+              </ul>
+            </div>
+
+            <!-- Etapa 3 -->
+            <div class="arch-card">
+              <div class="arch-card-badge">ETAPA 03</div>
+              <h4 class="arch-card-title">Motor Cartográfico</h4>
+              <ul class="arch-card-list">
+                <li><strong>Leaflet.js Engine</strong>: Gerenciador do mapa base, controle de zoom e marcadores customizados por relevância.</li>
+                <li><strong>HTML5 Canvas Overlay</strong>: Renderizador de arcos de Bézier e partículas de fótons em 60 FPS (Lowy style).</li>
+                <li><strong>Motor Geodésico Haversine</strong>: Cálculo em tempo real dos 3 geossítios mais próximos e distâncias em km.</li>
+                <li><strong>Conversor UTM Live</strong>: Cálculo contínuo das coordenadas métricas UTM Zona 22S sob o cursor do mouse.</li>
+              </ul>
+            </div>
+
+            <!-- Etapa 4 -->
+            <div class="arch-card">
+              <div class="arch-card-badge">ETAPA 04</div>
+              <h4 class="arch-card-title">Camadas & Mapas Base</h4>
+              <ul class="arch-card-list">
+                <li><strong>ESRI Dark Gray Canvas</strong>: Modo Escuro profissional e limpo, 100% sem marcas d'água.</li>
+                <li><strong>ESRI World Topographic</strong>: Modo Claro evidenciando o relevo sombreado dos cânions e escarpas.</li>
+                <li><strong>ESRI World Imagery</strong>: Visão de satélite híbrida de alta resolução espacial.</li>
+                <li><strong>Limites Territoriais IBGE</strong>: Linhas pontilhadas luminosas com preenchimento sutil e zoom ao clique.</li>
+              </ul>
+            </div>
+
+            <!-- Etapa 5 -->
+            <div class="arch-card" style="grid-column: span 2;">
+              <div class="arch-card-badge">ETAPA 05</div>
+              <h4 class="arch-card-title">Interface do Usuário & Design System (Lowy HUD)</h4>
+              <ul class="arch-card-list">
+                <li><strong>Topo Temático</strong>: Logotipo SVG oficial GMUCCS, abas de navegação, botão de alternância Claro/Escuro e chancela UNESCO.</li>
+                <li><strong>Painel Lateral HUD</strong>: KPIs dinâmicos, busca instantânea, filtros cruzados (grau, categoria, município) e ficha técnica com altitude e formação.</li>
+                <li><strong>Radar Pulsante & Callout Angular</strong>: Anéis concêntricos no nó ativo e caixa com vetor guia conectado diretamente ao geossítio.</li>
+                <li><strong>5 Modos de Conexão da Rede</strong>: Conexão por Município, por Conteúdo, por Grau de Relevância, por Proximidade e Constelação Geral.</li>
+              </ul>
+            </div>
+
+          </div>
+
+          <!-- Tech Stack Badges -->
+          <div class="tech-stack-row">
+            <span class="tech-badge">HTML5 Semântico</span>
+            <span class="tech-badge">Vanilla CSS3 (Glassmorphism)</span>
+            <span class="tech-badge">JavaScript ES6+</span>
+            <span class="tech-badge">Leaflet.js v1.9.4</span>
+            <span class="tech-badge">HTML5 Canvas API</span>
+            <span class="tech-badge">GeoPackage (OGC)</span>
+            <span class="tech-badge">API Malhas IBGE</span>
+            <span class="tech-badge">ESRI ArcGIS REST Tiles</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <!-- Data Module -->
+  <script src="data.js"></script>
+  
+  <!-- Main Application Logic -->
+  <script src="app.js?v=2.0.1"></script>
+</body>
+</html>
