@@ -1,0 +1,1002 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Material interativo da aula Fundamentos de Sensoriamento Remoto: do sistema fonte–alvo–sensor ao cálculo do NDVI com Sentinel-2.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Fundamentos de Sensoriamento Remoto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+/* Layout: percurso em seis etapas (roteiro da aula), coluna de leitura com painéis interativos; navegação fixa por etapa. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --surface-2:#e9eef5; --ink:#132030; --muted:#55637a; --line:#d4dbe6;
+  --accent:#1f5fa8; --accent-ink:#ffffff; --accent-soft:#dfe9f6;
+  --veg:#2b8a3c; --soil:#c87618; --water:#2a62b0; --snow:#77818f; --urban:#62666f;
+  --red:#c1443a; --nir:#8a2f5a; --pulse:#7a3fa0;
+  --ok:#2b7a3c; --ok-soft:#dcefdf; --mid:#9a6a08; --mid-soft:#f6ebcf; --no:#a8402c; --no-soft:#f6e0da;
+  --font-display:'Archivo','Arial Narrow',Arial,sans-serif;
+  --font-body:'Source Sans 3','Segoe UI',Roboto,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0c131e; --surface:#131d2c; --surface-2:#1a2638; --ink:#e3e9f2; --muted:#98a6bb; --line:#26344a;
+  --accent:#74a7e9; --accent-ink:#0c131e; --accent-soft:#1a2c46;
+  --veg:#62c26f; --soil:#eaa34d; --water:#6aa2e8; --snow:#b2bcc9; --urban:#a6abb5;
+  --red:#e8766a; --nir:#d77aa5; --pulse:#b58ae0;
+  --ok:#6dc77b; --ok-soft:#173523; --mid:#e3b84e; --mid-soft:#3a2f14; --no:#ec8a74; --no-soft:#3d1f19;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0c131e; --surface:#131d2c; --surface-2:#1a2638; --ink:#e3e9f2; --muted:#98a6bb; --line:#26344a;
+  --accent:#74a7e9; --accent-ink:#0c131e; --accent-soft:#1a2c46;
+  --veg:#62c26f; --soil:#eaa34d; --water:#6aa2e8; --snow:#b2bcc9; --urban:#a6abb5;
+  --red:#e8766a; --nir:#d77aa5; --pulse:#b58ae0;
+  --ok:#6dc77b; --ok-soft:#173523; --mid:#e3b84e; --mid-soft:#3a2f14; --no:#ec8a74; --no-soft:#3d1f19;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.6;}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1060px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--font-display);font-stretch:85%;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,5vw,3.3rem);font-weight:800;letter-spacing:-.01em}
+h2{font-size:clamp(1.5rem,3vw,2.05rem);font-weight:750}
+h3{font-size:1.18rem;font-weight:700}
+p{margin:0}
+a{color:var(--accent)}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.88rem}
+.eyebrow{font-family:var(--font-mono);font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+/* Cabeçalho */
+.hero{padding-block:48px 28px;border-bottom:1px solid var(--line);background:var(--surface)}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px;align-items:end}
+.hero .lead{font-size:1.18rem;color:var(--muted);margin-top:12px;max-width:40ch}
+.hero .meta{margin-top:18px;font-size:.92rem;color:var(--muted)}
+.bandstrip{display:flex;height:10px;border-radius:2px;overflow:hidden;margin-top:26px;max-width:520px}
+.bandstrip span{flex:1}
+.roteiro{list-style:none;margin:0;padding:0;display:grid;gap:6px;counter-reset:r}
+.roteiro a{display:grid;grid-template-columns:2.1em 1fr auto;gap:8px;align-items:baseline;text-decoration:none;color:var(--ink);padding:7px 10px;border-radius:6px;border:1px solid transparent}
+.roteiro a:hover{border-color:var(--line);background:var(--bg)}
+.roteiro .n{font-family:var(--font-mono);color:var(--accent);font-weight:500}
+.roteiro .sl{font-family:var(--font-mono);font-size:.75rem;color:var(--muted)}
+
+/* Navegação fixa */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nav-inner{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding-block:8px}
+.nav-inner::-webkit-scrollbar{display:none}
+.nav a{flex:none;text-decoration:none;color:var(--muted);font-size:.9rem;padding:6px 11px;border-radius:999px;white-space:nowrap}
+.nav a b{font-family:var(--font-mono);font-weight:500;margin-right:4px}
+.nav a.on{background:var(--accent);color:var(--accent-ink)}
+.nav a:not(.on):hover{background:var(--surface-2);color:var(--ink)}
+
+/* Etapas */
+main{padding-block:12px 40px}
+.step{padding-block:52px 20px;border-bottom:1px solid var(--line);scroll-margin-top:56px}
+.step:last-of-type{border-bottom:0}
+.step-head{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start;margin-bottom:22px}
+.step-n{font-family:var(--font-display);font-stretch:75%;font-weight:800;font-size:3.4rem;line-height:.9;color:var(--accent)}
+.step-head .eyebrow{margin-bottom:6px}
+.prose{max-width:68ch;display:grid;gap:12px}
+.block{margin-top:30px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 28px;margin:0}
+.keys div{border-top:2px solid var(--accent);padding-top:8px}
+.keys dt{font-weight:700;font-family:var(--font-display);font-stretch:90%}
+.keys dd{margin:2px 0 0;color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;min-width:0}
+.panel-title{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline}
+.note{font-size:.84rem;color:var(--muted);font-style:italic}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.cols>*,.scene>*{grid-template-columns:minmax(0,1fr)}
+.cols-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.chart-scroll svg{display:block;width:100%;min-width:560px;height:auto}
+svg text{font-family:var(--font-body);fill:var(--ink)}
+svg .t-muted{fill:var(--muted)}
+svg .t-mono{font-family:var(--font-mono)}
+svg .axis{stroke:var(--line);stroke-width:1}
+svg .grid{stroke:var(--line);stroke-width:1;stroke-dasharray:2 4}
+
+/* Controles */
+.seg{display:inline-flex;flex-wrap:wrap;gap:4px;background:var(--surface-2);padding:4px;border-radius:8px}
+.seg button,.chip,.btn{font:inherit;font-size:.9rem;border:0;cursor:pointer;color:var(--ink);background:transparent;padding:6px 12px;border-radius:6px}
+.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.12);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn{border:1px solid var(--line);background:var(--surface)}
+.btn:hover{background:var(--surface-2)}
+.ctrl{display:grid;gap:4px}
+.ctrl label{display:flex;justify-content:space-between;gap:10px;font-size:.92rem}
+.ctrl output{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.readout div{background:var(--surface-2);border-radius:8px;padding:10px 12px;min-width:0}
+.readout span{display:block;font-size:.78rem;color:var(--muted);font-family:var(--font-mono);letter-spacing:.04em;text-transform:uppercase}
+.readout strong{display:block;font-family:var(--font-mono);font-weight:500;font-size:1.12rem;overflow-wrap:anywhere}
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 8px 8px 0}
+.warnbox{border-left:3px solid var(--no);background:var(--no-soft);padding:10px 14px;border-radius:0 8px 8px 0}
+
+/* Definições */
+.defs{display:grid;gap:12px}
+.def{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:14px 18px}
+.def cite{font-style:normal;font-family:var(--font-mono);font-size:.8rem;color:var(--accent);letter-spacing:.03em}
+.def p{margin-top:4px}
+.def [data-k]{border-radius:3px;transition:background .2s,box-shadow .2s}
+.defs.hl-contato [data-k=contato],.defs.hl-rad [data-k=rad],.defs.hl-sup [data-k=sup],.defs.hl-sens [data-k=sens]{background:var(--mid-soft);box-shadow:0 0 0 2px var(--mid-soft)}
+.chipcount{font-size:.88rem;color:var(--muted);min-height:1.4em}
+
+/* Diagrama do sistema */
+.hot{cursor:pointer}
+.hot:hover .hl,.hot.sel .hl{stroke:var(--accent);stroke-width:3}
+.partinfo{min-height:7.5em}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+
+/* Tabela de status */
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--font-mono);font-weight:500;font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.table-scroll{overflow-x:auto}
+.pill{display:inline-block;font-size:.8rem;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.mid{background:var(--mid-soft);color:var(--mid)}
+.pill.no{background:var(--no-soft);color:var(--no)}
+
+/* Canvas de cena */
+.scene{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+.scene canvas{width:100%;max-width:440px;aspect-ratio:1;image-rendering:pixelated;border-radius:6px;border:1px solid var(--line);display:block}
+.ramp{height:12px;border-radius:3px;background:linear-gradient(90deg,rgb(165,0,38),rgb(253,174,97) 50%,rgb(255,255,191) 60%,rgb(166,217,106) 75%,rgb(0,104,55))}
+.ramp-lab{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:.78rem;color:var(--muted)}
+.swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:4px 12px;font-size:.86rem}
+.swatches i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+
+/* Plataformas */
+.card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--surface);min-width:0}
+.card h3{margin-bottom:4px}
+
+/* Quantização */
+.quant{width:100%;height:46px;border-radius:4px;display:block;border:1px solid var(--line)}
+
+/* NDVI */
+.ndvi-scale{position:relative;height:38px;margin-top:6px}
+.ndvi-scale .bands{display:flex;height:16px;border-radius:3px;overflow:hidden}
+.ndvi-scale .bands span{display:block}
+.ndvi-scale .mark{position:absolute;top:-6px;width:2px;height:28px;background:var(--ink);transform:translateX(-1px);transition:left .15s}
+.ndvi-scale .ticks{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:.74rem;color:var(--muted);margin-top:3px}
+.formula{font-family:var(--font-mono);font-size:1.05rem;background:var(--surface-2);padding:10px 14px;border-radius:8px;overflow-x:auto;white-space:nowrap}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+
+/* Listas de verificação */
+.check{list-style:none;padding:0;margin:0;display:grid;gap:2px;counter-reset:c}
+.check li{display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:start;padding:8px 6px;border-radius:6px}
+.check li:hover{background:var(--surface-2)}
+.check input{width:18px;height:18px;margin-top:4px;accent-color:var(--accent)}
+.check .n{font-family:var(--font-mono);color:var(--muted);min-width:1.4em}
+.check li.done label{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+.progress{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden}
+.progress span{display:block;height:100%;background:var(--ok);width:0;transition:width .25s}
+.tree{font-family:var(--font-mono);font-size:.84rem;background:var(--surface-2);border-radius:8px;padding:12px 14px;overflow-x:auto;white-space:pre;line-height:1.55}
+.tree b{color:var(--accent);font-weight:500}
+
+/* Síntese e discussão */
+.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;counter-reset:f}
+.flow div{padding:12px 14px;border-top:3px solid var(--accent);position:relative}
+.flow div+div{border-left:1px solid var(--line)}
+.flow b{font-family:var(--font-display);font-stretch:85%;font-size:1.05rem;display:block}
+.qs{display:grid;gap:12px}
+.q{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:14px 16px;display:grid;gap:8px}
+.q p{font-weight:600}
+.q .links{font-size:.88rem;color:var(--muted)}
+.q textarea{width:100%;min-height:64px;resize:vertical;font:inherit;font-size:.95rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.refs{display:grid;gap:10px;max-width:80ch}
+.refs p{padding-left:0;text-indent:0;line-height:1.45}
+.ph{background:var(--mid-soft);color:var(--mid);border-radius:3px;padding:0 3px;font-family:var(--font-mono);font-size:.86em}
+footer{border-top:1px solid var(--line);padding-block:24px 40px;color:var(--muted);font-size:.88rem}
+
+@media (max-width:820px){
+  .hero-grid,.cols,.scene{grid-template-columns:minmax(0,1fr)}
+  .cols-3{grid-template-columns:minmax(0,1fr)}
+  .flow{grid-template-columns:1fr 1fr}
+  .flow div:nth-child(3){border-left:0}
+  .step-n{font-size:2.6rem}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;scroll-behavior:auto!important}}
+html{scroll-behavior:smooth}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Disciplina de Sensoriamento Remoto · Graduação · Prof. Hatan</p>
+      <h1 style="margin-top:10px">Fundamentos de Sensoriamento Remoto</h1>
+      <p class="lead">Radiação, espectro, alvos, sensores e aplicação prática com Sentinel-2.</p>
+      <div class="bandstrip" aria-hidden="true" id="bandstrip"></div>
+      <p class="meta">Material interativo organizado conforme o roteiro da aula. Curvas e valores numéricos são ilustrativos e aproximados, não medidos, tal como indicado nos esquemas originais dos slides.</p>
+    </div>
+    <nav aria-label="Roteiro da aula">
+      <p class="eyebrow" style="margin-bottom:6px">Roteiro da aula</p>
+      <ol class="roteiro">
+        <li><a href="#conceito"><span class="n">1</span><span>Conceito e componentes do sistema</span><span class="sl">s. 3–5</span></a></li>
+        <li><a href="#radiacao"><span class="n">2</span><span>Radiação eletromagnética e espectro</span><span class="sl">s. 6–7</span></a></li>
+        <li><a href="#atmosfera"><span class="n">3</span><span>Atmosfera: absorção, espalhamento e janelas</span><span class="sl">s. 8–9</span></a></li>
+        <li><a href="#alvos"><span class="n">4</span><span>Interação com os alvos e assinatura espectral</span><span class="sl">s. 10–11</span></a></li>
+        <li><a href="#sensores"><span class="n">5</span><span>Sensores, plataformas e resoluções</span><span class="sl">s. 12–16</span></a></li>
+        <li><a href="#pratica"><span class="n">6</span><span>Atividade prática: Sentinel-2 e NDVI</span><span class="sl">s. 19–21</span></a></li>
+      </ol>
+    </nav>
+  </div>
+</header>
+
+<nav class="nav" aria-label="Etapas">
+  <div class="wrap nav-inner" id="navlinks">
+    <a href="#conceito"><b>1</b>Conceito</a>
+    <a href="#radiacao"><b>2</b>Radiação</a>
+    <a href="#atmosfera"><b>3</b>Atmosfera</a>
+    <a href="#alvos"><b>4</b>Alvos</a>
+    <a href="#sensores"><b>5</b>Sensores</a>
+    <a href="#pratica"><b>6</b>Prática</a>
+    <a href="#sintese">Síntese e discussão</a>
+    <a href="#referencias">Referências</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ============ 1. CONCEITO ============ -->
+<section class="step" id="conceito">
+  <div class="step-head"><span class="step-n">1</span><div><p class="eyebrow">Slides 3, 4 e 5</p><h2>Conceito e componentes do sistema</h2></div></div>
+
+  <dl class="keys">
+    <div><dt>Definição</dt><dd>Obtenção de informação sobre alvos sem contato físico direto.</dd></div>
+    <div><dt>Princípio</dt><dd>Registro da energia eletromagnética refletida ou emitida.</dd></div>
+    <div><dt>Plataformas</dt><dd>Satélites, aeronaves, drones e sensores terrestres.</dd></div>
+    <div><dt>Aplicações</dt><dd>Cobertura do solo, vegetação, recursos hídricos, mudanças no território.</dd></div>
+  </dl>
+
+  <div class="block">
+    <h3>Definições na literatura</h3>
+    <p class="prose muted">Selecione um elemento conceitual para destacá-lo nas três definições e verificar em quantas delas ele aparece de forma explícita.</p>
+    <div class="chips" role="group" aria-label="Elementos conceituais">
+      <button class="chip" data-k="contato" aria-pressed="false">Ausência de contato</button>
+      <button class="chip" data-k="rad" aria-pressed="false">Radiação eletromagnética</button>
+      <button class="chip" data-k="sup" aria-pressed="false">Superfície terrestre</button>
+      <button class="chip" data-k="sens" aria-pressed="false">Sensores e imagens</button>
+    </div>
+    <p class="chipcount" id="chipcount" aria-live="polite"></p>
+    <div class="defs" id="defs">
+      <div class="def"><cite>(JENSEN, 2009, p. xiii)</cite><p>Arte e ciência de obter informações sobre um objeto <span data-k="contato">sem contato físico direto</span> com ele.</p></div>
+      <div class="def"><cite>(NOVO, 2010, p. 28)</cite><p>Uso combinado de <span data-k="sens">sensores</span> e equipamentos associados para processar e transmitir dados, com o fim de estudar eventos, fenômenos e processos da <span data-k="sup">superfície terrestre</span>, pelo registro e análise da interação da <span data-k="rad">radiação eletromagnética</span> com os materiais.</p></div>
+      <div class="def"><cite>(ZANOTTA; FERREIRA; ZORTEA, 2019, p. 11)</cite><p>Prática de obter informações sobre a <span data-k="sup">superfície terrestre</span> a partir de <span data-k="sens">imagens</span> adquiridas do espaço, com base na <span data-k="rad">radiação eletromagnética</span> refletida ou emitida em uma ou mais regiões do espectro.</p></div>
+    </div>
+    <p class="callout"><strong>Síntese (slide 4):</strong> o sensoriamento remoto obtém informação sobre a superfície terrestre sem contato direto, a partir da radiação eletromagnética registrada por sensores. As definições convergem nesse ponto.</p>
+    <p class="note">Transcrição conforme o slide 4. Recomenda-se confirmar na obra original se os trechos constituem citação direta; nesse caso, a NBR 10520 exige aspas e indicação de página.</p>
+  </div>
+
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>Da fonte ao sensor</h3><span class="eyebrow">Slide 5 · esquema didático</span></div>
+      <p class="muted small">Selecione um componente no diagrama ou nos botões. Os controles abaixo distribuem a energia incidente entre os três caminhos; a espessura das setas acompanha os valores.</p>
+      <div class="seg" role="group" aria-label="Componentes" id="partbtns">
+        <button data-part="fonte" aria-pressed="true">Fonte</button>
+        <button data-part="atmosfera" aria-pressed="false">Atmosfera</button>
+        <button data-part="alvo" aria-pressed="false">Alvo</button>
+        <button data-part="sensor" aria-pressed="false">Sensor</button>
+      </div>
+      <div class="chart-scroll">
+        <svg id="sysdiag" viewBox="0 0 720 360" role="img" aria-label="Diagrama: Sol, atmosfera, alvo e sensor, com energia incidente, refletida, absorvida e transmitida">
+          <defs>
+            <marker id="ah-sun" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0L10,5L0,10z" style="fill:var(--soil)"/></marker>
+            <marker id="ah-ref" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0L10,5L0,10z" style="fill:var(--veg)"/></marker>
+            <marker id="ah-abs" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0L10,5L0,10z" style="fill:var(--red)"/></marker>
+            <marker id="ah-tra" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0L10,5L0,10z" style="fill:var(--pulse)"/></marker>
+          </defs>
+          <g class="hot" data-part="atmosfera" tabindex="0" role="button" aria-label="Atmosfera">
+            <rect class="hl" x="20" y="120" width="680" height="80" rx="4" style="fill:var(--accent-soft);stroke:transparent"/>
+            <text x="688" y="140" text-anchor="end" style="fill:var(--accent);font-weight:700;font-size:14px">Atmosfera</text>
+          </g>
+          <g class="hot" data-part="alvo" tabindex="0" role="button" aria-label="Alvo">
+            <rect class="hl" x="20" y="286" width="680" height="64" style="fill:var(--soil);opacity:.55;stroke:transparent"/>
+            <rect x="320" y="274" width="150" height="14" style="fill:var(--veg)"/>
+            <text x="60" y="324" style="font-weight:700;font-size:14px">Alvo (superfície)</text>
+          </g>
+          <g class="hot" data-part="fonte" tabindex="0" role="button" aria-label="Fonte">
+            <circle class="hl" cx="90" cy="66" r="32" style="fill:#f2b705;stroke:transparent"/>
+            <text x="90" y="118" text-anchor="middle" style="font-weight:700;font-size:13px">Sol (fonte)</text>
+          </g>
+          <g class="hot" data-part="sensor" tabindex="0" role="button" aria-label="Sensor">
+            <rect class="hl" x="590" y="22" width="100" height="34" rx="4" style="fill:var(--ink);stroke:transparent"/>
+            <text x="640" y="44" text-anchor="middle" style="fill:var(--bg);font-weight:700;font-size:13px">Sensor</text>
+            <text x="640" y="74" text-anchor="middle" class="t-muted" style="font-size:12px">registra a energia</text>
+          </g>
+          <line id="ar-inc" x1="118" y1="92" x2="370" y2="268" style="stroke:var(--soil)" stroke-width="7" marker-end="url(#ah-sun)"/>
+          <line id="ar-ref" x1="420" y1="268" x2="600" y2="64" style="stroke:var(--veg)" stroke-width="5" marker-end="url(#ah-ref)"/>
+          <line id="ar-abs" x1="378" y1="290" x2="378" y2="336" style="stroke:var(--red)" stroke-width="5" marker-end="url(#ah-abs)"/>
+          <line id="ar-tra" x1="430" y1="290" x2="490" y2="336" style="stroke:var(--pulse)" stroke-width="3" marker-end="url(#ah-tra)"/>
+          <text x="200" y="206" style="fill:var(--soil);font-weight:700;font-size:13px">Incidente 100%</text>
+          <text id="lb-ref" x="520" y="186" style="fill:var(--veg);font-weight:700;font-size:13px">Refletida</text>
+          <text id="lb-abs" x="300" y="330" text-anchor="end" style="fill:var(--red);font-weight:700;font-size:13px">Absorvida</text>
+          <text id="lb-tra" x="500" y="330" style="fill:var(--pulse);font-weight:700;font-size:13px">Transmitida</text>
+        </svg>
+      </div>
+      <div class="partinfo callout" id="partinfo" aria-live="polite"></div>
+      <div class="cols">
+        <div class="ctrl"><label for="sl-abs">Absorvida <output id="o-abs">35%</output></label><input type="range" id="sl-abs" min="0" max="100" value="35"></div>
+        <div class="ctrl"><label for="sl-tra">Transmitida <output id="o-tra">15%</output></label><input type="range" id="sl-tra" min="0" max="100" value="15"></div>
+      </div>
+      <div class="readout">
+        <div><span>Refletida</span><strong id="o-ref">50%</strong></div>
+        <div><span>Reflectância ρ</span><strong id="o-rho">0,50</strong></div>
+        <div><span>Balanço</span><strong id="o-bal">R + A + T = 100%</strong></div>
+      </div>
+      <p class="note">Reflectância = energia refletida ÷ energia incidente, por comprimento de onda. Valores hipotéticos, destinados apenas à exploração do balanço de energia.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. RADIAÇÃO ============ -->
+<section class="step" id="radiacao">
+  <div class="step-head"><span class="step-n">2</span><div><p class="eyebrow">Slides 6 e 7</p><h2>Radiação eletromagnética e espectro</h2></div></div>
+  <dl class="keys">
+    <div><dt>Onda</dt><dd>Comprimento de onda e frequência são inversamente proporcionais.</dd></div>
+    <div><dt>Partícula</dt><dd>Fótons, pacotes de energia.</dd></div>
+    <div><dt>Energia</dt><dd>Quanto menor o comprimento de onda, maior a energia.</dd></div>
+    <div><dt>Em sensoriamento</dt><dd>Cada sensor registra a energia em faixas específicas.</dd></div>
+  </dl>
+
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>Explorador do espectro</h3><span class="eyebrow">Escala logarítmica · limites aproximados</span></div>
+      <p class="muted small">Desloque o cursor ou clique na faixa do espectro. Frequência e energia do fóton são calculadas pelas relações <span class="mono">f = c/λ</span> e <span class="mono">E = h·c/λ</span>.</p>
+      <div class="chart-scroll">
+        <svg id="specbar" viewBox="0 0 720 150" role="img" aria-label="Espectro eletromagnético com marcador do comprimento de onda selecionado"></svg>
+      </div>
+      <div class="ctrl"><label for="sl-wl">Comprimento de onda (log₁₀ λ em metros) <output id="o-wlraw" class="mono"></output></label><input type="range" id="sl-wl" min="-12" max="4" step="0.01" value="-6.18"></div>
+      <div class="chips" role="group" aria-label="Atalhos de comprimento de onda" id="wlpresets">
+        <button class="chip" data-v="0.49e-6">Azul · B02</button>
+        <button class="chip" data-v="0.665e-6">Vermelho · B04</button>
+        <button class="chip" data-v="0.842e-6">IV próximo · B08</button>
+        <button class="chip" data-v="1.61e-6">SWIR · B11</button>
+        <button class="chip" data-v="10e-6">IV termal</button>
+        <button class="chip" data-v="0.03">Micro-ondas</button>
+      </div>
+      <svg id="wave" viewBox="0 0 720 80" style="width:100%;height:auto;display:block" aria-hidden="true"><path id="wavepath" fill="none" stroke-width="2.5"/></svg>
+      <div class="readout">
+        <div><span>Comprimento de onda</span><strong id="o-wl"></strong></div>
+        <div><span>Frequência</span><strong id="o-f"></strong></div>
+        <div><span>Energia do fóton</span><strong id="o-e"></strong></div>
+        <div><span>Região</span><strong id="o-reg" style="font-family:var(--font-body);font-weight:700"></strong></div>
+      </div>
+      <p id="o-regnote" class="callout"></p>
+      <p class="note">Constantes: c = 2,998 × 10⁸ m/s; h = 6,626 × 10⁻³⁴ J·s; 1 eV = 1,602 × 10⁻¹⁹ J. As fronteiras entre regiões são convencionais e aproximadas (slide 7).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. ATMOSFERA ============ -->
+<section class="step" id="atmosfera">
+  <div class="step-head"><span class="step-n">3</span><div><p class="eyebrow">Slides 8 e 9</p><h2>Atmosfera: absorção, espalhamento e janelas</h2></div></div>
+  <div class="prose">
+    <p>A radiação atravessa a atmosfera no trajeto da fonte ao alvo e no retorno ao sensor. Gases como ozônio (O₃), vapor d’água e dióxido de carbono (CO₂) absorvem energia em faixas específicas; as faixas de transmitância elevada denominam-se <strong>janelas atmosféricas</strong> e delimitam as regiões úteis para o imageamento da superfície.</p>
+  </div>
+
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>Transmitância atmosférica</h3><span class="eyebrow">Slide 8 · curva ilustrativa</span></div>
+      <label class="small" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="cb-s2bands" checked> Sobrepor bandas do Sentinel-2 (B02 a B12)</label>
+      <div class="chart-scroll"><svg id="transchart" viewBox="0 0 720 330" role="img" aria-label="Curva de transmitância atmosférica entre 0,3 e 15 micrômetros"></svg></div>
+      <p class="small" id="o-trans" aria-live="polite">Passe o cursor sobre o gráfico para ler a transmitância em cada comprimento de onda.</p>
+      <p class="note">Curva ilustrativa e aproximada, não medida; as posições das bandas de absorção são típicas (slide 8). Posições das bandas do Sentinel-2 aproximadas, a validar na documentação técnica da missão.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="cols">
+      <div class="panel">
+        <div class="panel-title"><h3>Espalhamento Rayleigh</h3><span class="eyebrow">Slide 9</span></div>
+        <p class="small muted">O espalhamento por moléculas é proporcional a λ⁻⁴; o espalhamento por aerossóis (Mie) varia pouco com λ. Compare dois comprimentos de onda.</p>
+        <div class="chart-scroll"><svg id="raychart" viewBox="0 0 460 250" role="img" aria-label="Curvas de espalhamento Rayleigh e Mie entre 0,4 e 1,0 micrômetro"></svg></div>
+        <div class="ctrl"><label for="sl-l1">λ₁ <output id="o-l1">0,45 µm</output></label><input type="range" id="sl-l1" min="0.40" max="1.00" step="0.01" value="0.45"></div>
+        <div class="ctrl"><label for="sl-l2">λ₂ <output id="o-l2">0,70 µm</output></label><input type="range" id="sl-l2" min="0.40" max="1.00" step="0.01" value="0.70"></div>
+        <p class="callout" id="o-ray" aria-live="polite"></p>
+        <p class="note">Curvas teóricas simplificadas; Mie representado de forma qualitativa (slide 9).</p>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><h3>Bruma e contraste</h3><span class="eyebrow">Consequência para o sensor</span></div>
+        <p class="small muted">A luz espalhada soma-se ao sinal da superfície e reduz o contraste da imagem. O controle mistura à cena um componente difuso uniforme.</p>
+        <canvas id="cv-haze" width="600" height="600" style="width:100%;max-width:440px;aspect-ratio:1;border-radius:6px;border:1px solid var(--line);display:block" aria-label="Cena sintética com bruma ajustável"></canvas>
+        <div class="ctrl"><label for="sl-haze">Componente espalhado <output id="o-haze">0%</output></label><input type="range" id="sl-haze" min="0" max="80" value="0"></div>
+        <p class="small" id="o-contrast"></p>
+        <p class="note">Cena sintética gerada para fins didáticos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. ALVOS ============ -->
+<section class="step" id="alvos">
+  <div class="step-head"><span class="step-n">4</span><div><p class="eyebrow">Slides 10 e 11</p><h2>Interação com os alvos e assinatura espectral</h2></div></div>
+  <dl class="keys">
+    <div><dt>Refletida, absorvida ou transmitida</dt><dd>A energia incidente divide-se entre os três caminhos.</dd></div>
+    <div><dt>Por que difere</dt><dd>Propriedades físico-químicas e biológicas de cada alvo.</dd></div>
+    <div><dt>Reflectância</dt><dd>Razão entre energia refletida e incidente, por comprimento de onda.</dd></div>
+    <div><dt>Consequência</dt><dd>Alvos distintos têm respostas espectrais distintas.</dd></div>
+  </dl>
+
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>Assinaturas espectrais</h3><span class="eyebrow">Slide 11 · curvas ilustrativas</span></div>
+      <div class="chips" role="group" aria-label="Alvos exibidos" id="sigtoggles">
+        <button class="chip" data-t="veg" aria-pressed="true">Vegetação sadia</button>
+        <button class="chip" data-t="soil" aria-pressed="true">Solo exposto</button>
+        <button class="chip" data-t="water" aria-pressed="true">Água</button>
+        <button class="chip" data-t="snow" aria-pressed="true">Neve</button>
+      </div>
+      <div class="chart-scroll"><svg id="sigchart" viewBox="0 0 720 380" role="img" aria-label="Curvas de reflectância de vegetação, solo, água e neve entre 0,45 e 2,4 micrômetros"></svg></div>
+      <p class="small muted">Clique em uma banda sombreada do Sentinel-2 para comparar a reflectância dos alvos naquela faixa.</p>
+      <div class="table-scroll"><table id="bandtable"><thead><tr><th>Alvo</th><th>Reflectância na banda</th><th></th></tr></thead><tbody></tbody></table></div>
+      <p class="note">Curvas ilustrativas e aproximadas, não medidas, reproduzidas a partir do esquema do slide 11. Bandas do Sentinel-2 com posições e larguras aproximadas.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 5. SENSORES ============ -->
+<section class="step" id="sensores">
+  <div class="step-head"><span class="step-n">5</span><div><p class="eyebrow">Slides 12 a 16</p><h2>Sensores, plataformas e resoluções</h2></div></div>
+
+  <div class="block" style="margin-top:0">
+    <div class="panel">
+      <div class="panel-title"><h3>Sensores passivos e ativos</h3><span class="eyebrow">Slide 12</span></div>
+      <p class="small muted">Sensores passivos dependem da luz solar (ou da emissão do alvo); sensores ativos emitem a própria energia e medem o eco. Altere as condições de aquisição.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <div class="seg" role="group" aria-label="Período" id="seg-day"><button data-v="1" aria-pressed="true">Dia</button><button data-v="0" aria-pressed="false">Noite</button></div>
+        <div class="seg" role="group" aria-label="Nebulosidade" id="seg-sky"><button data-v="1" aria-pressed="true">Céu limpo</button><button data-v="0" aria-pressed="false">Nublado</button></div>
+      </div>
+      <div class="chart-scroll"><svg id="padiag" viewBox="0 0 720 300" role="img" aria-label="Comparação entre sensor passivo e ativo"></svg></div>
+      <div class="table-scroll"><table><thead><tr><th>Sensor</th><th>Tipo</th><th>Resultado</th><th>Motivo</th></tr></thead><tbody id="patable"></tbody></table></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>Plataformas e tipos de sensor <span class="eyebrow" style="margin-left:6px">Slide 13</span></h3>
+    <div class="cols-3">
+      <div class="card"><h3>Orbital</h3><p class="muted">Grande área e revisita regular (Landsat, Sentinel-2).</p></div>
+      <div class="card"><h3>Aérea</h3><p class="muted">Aeronaves e drones; alta resolução espacial sob demanda.</p></div>
+      <div class="card"><h3>Terrestre</h3><p class="muted">LiDAR portátil (SLAM), radiômetros de campo.</p></div>
+    </div>
+    <p class="muted">Quanto às bandas, os sensores classificam-se em pancromáticos, multiespectrais e hiperespectrais, distinção que corresponde à resolução espectral.</p>
+  </div>
+
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>Resolução espectral</h3><span class="eyebrow">Slide 14 · quantas bandas e quão estreitas</span></div>
+      <div class="seg" role="group" aria-label="Tipo de sensor" id="seg-spec">
+        <button data-v="pan" aria-pressed="false">Pancromático</button>
+        <button data-v="multi" aria-pressed="true">Multiespectral</button>
+        <button data-v="hiper" aria-pressed="false">Hiperespectral</button>
+      </div>
+      <div class="chart-scroll"><svg id="specres" viewBox="0 0 720 260" role="img" aria-label="Amostragem da curva de vegetação conforme o tipo de sensor"></svg></div>
+      <p class="callout" id="o-specres" aria-live="polite"></p>
+      <p class="note">Esquema didático sobre uma curva ilustrativa de vegetação; posições de bandas aproximadas. O caso hiperespectral usa, como exemplo, bandas contíguas de 10 nm.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>Resolução espacial</h3><span class="eyebrow">Slide 15 · o tamanho do pixel define o detalhe</span></div>
+      <div class="scene">
+        <canvas id="cv-spatial" width="600" height="600" aria-label="Cena sintética reamostrada conforme o tamanho do pixel"></canvas>
+        <div style="display:grid;gap:14px;min-width:0">
+          <div class="ctrl"><label for="sl-pix">Tamanho do pixel <output id="o-pix">1 m</output></label><input type="range" id="sl-pix" min="0" max="8" step="1" value="0"></div>
+          <div class="readout">
+            <div><span>Pixels na cena</span><strong id="o-npix"></strong></div>
+            <div><span>Categoria</span><strong id="o-cat" style="font-family:var(--font-body);font-weight:700"></strong></div>
+          </div>
+          <div class="swatches" id="sw-classes"></div>
+          <p class="small muted">A cena cobre 600 m × 600 m. À medida que o pixel aumenta, alvos distintos passam a compor um mesmo pixel (pixel misto) e feições estreitas, como o rio e as vias, deixam de ser individualizadas.</p>
+          <p class="note">Cena sintética gerada para fins didáticos; tamanhos de pixel são ordens de grandeza típicas: alto detalhe de 0,1 a 3 m, médio de 10 a 30 m, baixo de centenas de metros (slide 15).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="cols">
+      <div class="panel">
+        <div class="panel-title"><h3>Resolução radiométrica</h3><span class="eyebrow">Slide 16</span></div>
+        <p class="small muted">Nível de quantização: número de bits usado para registrar a energia. Com n bits, o sensor distingue 2ⁿ níveis.</p>
+        <div class="ctrl"><label for="sl-bits">Quantização <output id="o-bits">8 bits</output></label><input type="range" id="sl-bits" min="1" max="16" value="8"></div>
+        <canvas id="cv-quant" class="quant" width="600" height="46" aria-label="Rampa de cinza quantizada"></canvas>
+        <div class="chart-scroll"><svg id="quantchart" viewBox="0 0 460 180" role="img" aria-label="Sinal com pequena variação de energia e sua versão quantizada"></svg></div>
+        <div class="readout">
+          <div><span>Níveis</span><strong id="o-levels"></strong></div>
+          <div><span>Menor variação registrável</span><strong id="o-step"></strong></div>
+        </div>
+        <p class="note">O sinal simulado varia menos de 1% da escala total. A rampa de cinza é exibida em monitor de 8 bits; acima desse valor, a diferença aparece apenas no gráfico do sinal.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><h3>Resolução temporal e compromisso</h3><span class="eyebrow">Slide 16</span></div>
+        <dl class="keys" style="grid-template-columns:1fr">
+          <div><dt>Temporal</dt><dd>Tempo de revisita do sensor sobre o mesmo ponto da superfície.</dd></div>
+          <div><dt>Compromisso</dt><dd>Detalhe espacial, número de bandas e frequência de revisita raramente se maximizam em conjunto.</dd></div>
+          <div><dt>Escolha</dt><dd>O objetivo do estudo define qual resolução priorizar.</dd></div>
+        </dl>
+        <p class="small muted">As quatro resoluções (espectral, espacial, radiométrica e temporal) constituem, portanto, os critérios de seleção do sensor, retomados na discussão final.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6. PRÁTICA ============ -->
+<section class="step" id="pratica">
+  <div class="step-head"><span class="step-n">6</span><div><p class="eyebrow">Slides 19, 20 e 21</p><h2>Atividade prática: Sentinel-2 e NDVI</h2></div></div>
+
+  <div class="block" style="margin-top:0">
+    <div class="cols">
+      <div class="panel">
+        <div class="panel-title"><h3>Atividade 1: baixar o Sentinel-2</h3><span class="eyebrow">Slide 19</span></div>
+        <div class="progress" aria-hidden="true"><span id="pg-dl"></span></div>
+        <ol class="check" id="ck-dl">
+          <li><input type="checkbox" id="dl-1"><span class="n">1</span><label for="dl-1">Criar conta gratuita no <a href="https://browser.dataspace.copernicus.eu/" target="_blank" rel="noopener">Copernicus Browser</a> (o download exige login).</label></li>
+          <li><input type="checkbox" id="dl-2"><span class="n">2</span><label for="dl-2">Buscar: nível L2A, intervalo de datas e nuvens abaixo de 10%.</label></li>
+          <li><input type="checkbox" id="dl-3"><span class="n">3</span><label for="dl-3">Delimitar a área de interesse no mapa.</label></li>
+          <li><input type="checkbox" id="dl-4"><span class="n">4</span><label for="dl-4">Avaliar pela miniatura e baixar a cena (cerca de 1 GB).</label></li>
+          <li><input type="checkbox" id="dl-5"><span class="n">5</span><label for="dl-5">Descompactar e abrir GRANULE, IMG_DATA, R10m.</label></li>
+          <li><input type="checkbox" id="dl-6"><span class="n">6</span><label for="dl-6">Identificar B04 (vermelho) e B08 (infravermelho próximo).</label></li>
+        </ol>
+        <p class="note">O progresso fica salvo apenas neste navegador.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><h3>Onde estão as bandas</h3><span class="eyebrow">Passos 5 e 6</span></div>
+        <div class="tree">S2X_MSIL2A_&lt;data&gt;_..._T&lt;tile&gt;_&lt;...&gt;.SAFE/
+└── GRANULE/
+    └── L2A_T&lt;tile&gt;_.../
+        └── IMG_DATA/
+            └── <b>R10m/</b>
+                ├── T&lt;tile&gt;_&lt;data&gt;_B02_10m.jp2
+                ├── T&lt;tile&gt;_&lt;data&gt;_B03_10m.jp2
+                ├── <b>T&lt;tile&gt;_&lt;data&gt;_B04_10m.jp2</b>  ← vermelho
+                └── <b>T&lt;tile&gt;_&lt;data&gt;_B08_10m.jp2</b>  ← IV próximo</div>
+        <p class="small muted">A pasta R10m reúne as bandas com pixel de 10 m. Na assinatura espectral (etapa 4), B04 coincide com a absorção da clorofila e B08 com o platô do infravermelho próximo; a combinação das duas fundamenta o NDVI.</p>
+        <p class="note">Estrutura de pastas simplificada; os nomes completos variam conforme a cena.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>NDVI: o que é e como interpretar</h3><span class="eyebrow">Slide 20</span></div>
+      <p class="formula">NDVI = (NIR − RED) ÷ (NIR + RED) = (B08 − B04) ÷ (B08 + B04)</p>
+      <div class="cols">
+        <div style="display:grid;gap:12px;min-width:0">
+          <div class="ctrl"><label for="sl-red">RED · B04 (reflectância) <output id="o-red"></output></label><input type="range" id="sl-red" min="0" max="100" step="0.1" value="4"></div>
+          <div class="ctrl"><label for="sl-nir">NIR · B08 (reflectância) <output id="o-nir"></output></label><input type="range" id="sl-nir" min="0" max="100" step="0.1" value="50"></div>
+          <div class="presets" id="ndvipresets" role="group" aria-label="Alvos de exemplo"></div>
+          <div class="readout">
+            <div><span>NDVI</span><strong id="o-ndvi" style="font-size:1.5rem"></strong></div>
+            <div><span>Interpretação</span><strong id="o-ndviclass" style="font-family:var(--font-body);font-weight:700;font-size:1rem"></strong></div>
+          </div>
+          <div class="ndvi-scale" aria-hidden="true">
+            <div class="bands"><span style="width:50%;background:var(--water)"></span><span style="width:10%;background:var(--soil)"></span><span style="width:15%;background:color-mix(in srgb,var(--veg) 55%,#c9d86a)"></span><span style="width:25%;background:var(--veg)"></span></div>
+            <div class="mark" id="ndvimark"></div>
+            <div class="ticks"><span>−1</span><span>0</span><span>0,2</span><span>0,5</span><span>1</span></div>
+          </div>
+        </div>
+        <div style="min-width:0">
+          <div class="chart-scroll"><svg id="ndvibars" viewBox="0 0 460 250" role="img" aria-label="NDVI por tipo de alvo, valores ilustrativos do slide 20"></svg></div>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Faixa</th><th>Interpretação</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">−1 a 0</td><td>Água, neve, nuvem</td></tr>
+              <tr><td class="mono">0 a 0,2</td><td>Solo exposto, rocha, áreas construídas</td></tr>
+              <tr><td class="mono">0,2 a 0,5</td><td>Vegetação rala ou em estresse</td></tr>
+              <tr><td class="mono">0,5 a 1</td><td>Vegetação densa e vigorosa</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+      <p class="note">Valores do gráfico conforme o slide 20, calculados de reflectâncias ilustrativas, sem offset radiométrico; faixas de interpretação são orientações gerais. Os botões de exemplo usam reflectâncias ilustrativas escolhidas para reproduzir esses valores.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>Atividade 2: NDVI no QGIS</h3><span class="eyebrow">Slide 21</span></div>
+      <div class="cols">
+        <div style="display:grid;gap:12px;min-width:0">
+          <div class="progress" aria-hidden="true"><span id="pg-qgis"></span></div>
+          <ol class="check" id="ck-qgis">
+            <li><input type="checkbox" id="qg-1"><span class="n">1</span><label for="qg-1">Adicionar as camadas B04 e B08 no QGIS (Camada › Adicionar Camada Raster).</label></li>
+            <li><input type="checkbox" id="qg-2"><span class="n">2</span><label for="qg-2">Abrir Raster › Calculadora Raster e inserir a expressão com as duas camadas.</label></li>
+            <li><input type="checkbox" id="qg-3"><span class="n">3</span><label for="qg-3">Definir o arquivo de saída e executar.</label></li>
+            <li><input type="checkbox" id="qg-4"><span class="n">4</span><label for="qg-4">Aplicar rampa de cores: vermelho (baixo) a verde (alto).</label></li>
+            <li><input type="checkbox" id="qg-5"><span class="n">5</span><label for="qg-5">Interpretar o resultado e exportar o mapa em layout.</label></li>
+          </ol>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <code class="formula" id="qexpr" style="flex:1;min-width:0">( "B08@1" - "B04@1" ) / ( "B08@1" + "B04@1" )</code>
+            <button class="btn" id="btn-copy">Copiar expressão</button>
+          </div>
+          <p class="small muted">Na calculadora, os nomes das camadas correspondem aos arquivos carregados; substitua <span class="mono">B08</span> e <span class="mono">B04</span> pelos nomes exibidos na lista de bandas.</p>
+          <p class="warnbox small"><strong>Verificar antes:</strong> se o produto L2A aplica offset radiométrico, conferir nos metadados da cena (slide 21).</p>
+        </div>
+        <div style="display:grid;gap:10px;min-width:0">
+          <canvas id="cv-ndvi" width="600" height="600" style="width:100%;max-width:440px;aspect-ratio:1;image-rendering:pixelated;border-radius:6px;border:1px solid var(--line);display:block" aria-label="Mapa NDVI da cena sintética"></canvas>
+          <div class="ramp" aria-hidden="true"></div>
+          <div class="ramp-lab"><span>−1</span><span>0</span><span>+1</span></div>
+          <div class="ctrl"><label for="sl-pix2">Tamanho do pixel <output id="o-pix2">10 m</output></label><input type="range" id="sl-pix2" min="0" max="8" step="1" value="3"></div>
+          <p class="small" id="o-ndvihover" aria-live="polite">Passe o cursor sobre o mapa para ler o NDVI do pixel.</p>
+          <p class="note">Prévia sobre a cena sintética da etapa 5. O NDVI de cada pixel é calculado a partir das médias de B04 e B08 no pixel, de modo que pixels mistos apresentam valores intermediários.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SÍNTESE ============ -->
+<section class="step" id="sintese">
+  <div class="step-head"><span class="step-n" style="font-size:2.2rem">Σ</span><div><p class="eyebrow">Slides 17, 18 e 22</p><h2>Síntese e discussão</h2></div></div>
+  <div class="flow">
+    <div><b>Fonte → alvo → sensor</b><span class="muted small">A energia vai da fonte ao alvo, atravessa a atmosfera e chega ao sensor.</span></div>
+    <div><b>Espectro e janelas</b><span class="muted small">O espectro e as janelas atmosféricas definem as faixas utilizáveis.</span></div>
+    <div><b>Assinatura espectral</b><span class="muted small">A assinatura espectral sustenta a identificação dos alvos.</span></div>
+    <div><b>Escolha do sensor</b><span class="muted small">Depende das quatro resoluções e do objetivo.</span></div>
+  </div>
+
+  <div class="block">
+    <h3>Questões para discussão</h3>
+    <p class="muted small">Cada questão indica as etapas da página que reúnem os elementos para a resposta. As anotações ficam salvas apenas neste navegador.</p>
+    <div class="qs" id="qs"></div>
+  </div>
+</section>
+
+<!-- ============ REFERÊNCIAS ============ -->
+<section class="step" id="referencias">
+  <div class="step-head"><span class="step-n" style="font-size:2.2rem">§</span><div><p class="eyebrow">Slide 23 · ABNT NBR 6023</p><h2>Referências</h2></div></div>
+  <div class="refs">
+    <p>FLORENZANO, T. G. <strong>Imagens de satélite para estudos ambientais</strong>. São Paulo: Oficina de Textos, 2002.</p>
+    <p>FLORENZANO, T. G. <strong>Iniciação em sensoriamento remoto</strong>. 3. ed. São Paulo: Oficina de Textos, 2011.</p>
+    <p>JENSEN, J. R. <strong>Sensoriamento remoto do ambiente</strong>: uma perspectiva em recursos terrestres. Tradução de J. C. N. Epiphanio <em>et al.</em> São José dos Campos: Parêntese, 2009.</p>
+    <p>LORENZZETTI, J. A. <strong>Princípios físicos de sensoriamento remoto</strong>. São Paulo: Blucher, <span class="ph">[Inserir ano]</span>.</p>
+    <p>MOREIRA, M. A. <strong>Fundamentos do sensoriamento remoto e metodologias de aplicação</strong>. 4. ed. <span class="ph">[Confirmar local]</span>: UFV, 2011.</p>
+    <p>MORAES, E. C. <strong>Fundamentos de sensoriamento remoto</strong>. São José dos Campos: INPE, <span class="ph">[Confirmar ano; INPE-8984-PUD/62, cap. 1]</span>.</p>
+    <p>NOVO, E. M. L. M. <strong>Sensoriamento remoto</strong>: princípios e aplicações. 4. ed. São Paulo: Blucher, 2010.</p>
+    <p>PONZONI, F. J.; SHIMABUKURO, Y. E.; KUPLICH, T. M. <strong>Sensoriamento remoto da vegetação</strong>. 2. ed. São Paulo: Oficina de Textos, 2012.</p>
+    <p>ZANOTTA, D. C.; FERREIRA, M. P.; ZORTEA, M. <span class="ph">[Inserir título completo]</span>. <span class="ph">[Inserir local]</span>: <span class="ph">[Inserir editora]</span>, 2019.</p>
+  </div>
+  <p class="note" style="margin-top:14px">Lista reproduzida do slide 23; os marcadores entre colchetes indicam dados ainda não confirmados no material de origem e devem ser completados a partir das obras.</p>
+</section>
+</main>
+
+<footer><div class="wrap">Material interativo derivado da aula “Fundamentos de Sensoriamento Remoto”, Prof. Hatan. Esquemas didáticos com curvas ilustrativas e aproximadas.</div></footer>
+
+<script>
+(function(){
+'use strict';
+var NS='http://www.w3.org/2000/svg';
+var reduceMotion=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function S(tag,attrs,parent){var e=document.createElementNS(NS,tag);if(attrs)for(var k in attrs){if(k==='text')e.textContent=attrs[k];else if(k==='style')e.setAttribute('style',attrs[k]);else e.setAttribute(k,attrs[k]);}if(parent)parent.appendChild(e);return e;}
+function $(id){return document.getElementById(id);}
+function nf(v,d){return v.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function sig(v,n){return v.toLocaleString('pt-BR',{maximumSignificantDigits:n||3});}
+var store={get:function(k,d){try{var v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}},set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+function svgPt(svg,evt){var p=svg.createSVGPoint();p.x=evt.clientX;p.y=evt.clientY;var m=svg.getScreenCTM();return m?p.matrixTransform(m.inverse()):{x:0,y:0};}
+function interp(pts,x){if(x<=pts[0][0])return pts[0][1];for(var i=1;i<pts.length;i++){if(x<=pts[i][0]){var a=pts[i-1],b=pts[i];return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]);}}return pts[pts.length-1][1];}
+function segGroup(el,cb){var bs=el.querySelectorAll('button');bs.forEach(function(b){b.addEventListener('click',function(){bs.forEach(function(o){o.setAttribute('aria-pressed',o===b?'true':'false');});cb(b.dataset.v||b.dataset.part,b);});});}
+function wl2rgb(nm){var r,g,b;if(nm<440){r=(440-nm)/60;g=0;b=1;}else if(nm<490){r=0;g=(nm-440)/50;b=1;}else if(nm<510){r=0;g=1;b=(510-nm)/20;}else if(nm<580){r=(nm-510)/70;g=1;b=0;}else if(nm<645){r=1;g=(645-nm)/65;b=0;}else{r=1;g=0;b=0;}var f=1;if(nm<420)f=.4+.6*(nm-380)/40;else if(nm>680)f=.4+.6*(750-nm)/70;r=Math.max(0,Math.min(1,r*f));g=Math.max(0,Math.min(1,g*f));b=Math.max(0,Math.min(1,b*f));return 'rgb('+Math.round(r*255)+','+Math.round(g*255)+','+Math.round(b*255)+')';}
+
+/* Chart helper */
+function chart(svg,o){var W=o.w,H=o.h,m=o.m;var lx0=o.xlog?Math.log10(o.x[0]):o.x[0],lx1=o.xlog?Math.log10(o.x[1]):o.x[1];
+  var c={W:W,H:H,m:m,
+    sx:function(v){var t=o.xlog?Math.log10(v):v;return m.l+(t-lx0)/(lx1-lx0)*(W-m.l-m.r);},
+    sy:function(v){return H-m.b-(v-o.y[0])/(o.y[1]-o.y[0])*(H-m.t-m.b);},
+    ix:function(px){var t=lx0+(px-m.l)/(W-m.l-m.r)*(lx1-lx0);return o.xlog?Math.pow(10,t):t;}};
+  return c;}
+function axes(svg,c,o){var g=S('g',null,svg);
+  (o.yt||[]).forEach(function(v){S('line',{x1:c.m.l,x2:c.W-c.m.r,y1:c.sy(v),y2:c.sy(v),'class':'grid'},g);S('text',{x:c.m.l-8,y:c.sy(v)+4,'text-anchor':'end','class':'t-muted t-mono','font-size':11,text:o.yf?o.yf(v):v},g);});
+  S('line',{x1:c.m.l,x2:c.W-c.m.r,y1:c.H-c.m.b,y2:c.H-c.m.b,'class':'axis'},g);
+  (o.xt||[]).forEach(function(v){var x=c.sx(v);S('line',{x1:x,x2:x,y1:c.H-c.m.b,y2:c.H-c.m.b+5,'class':'axis'},g);S('text',{x:x,y:c.H-c.m.b+18,'text-anchor':'middle','class':'t-muted t-mono','font-size':11,text:o.xf?o.xf(v):v},g);});
+  if(o.xl)S('text',{x:(c.m.l+c.W-c.m.r)/2,y:c.H-4,'text-anchor':'middle','font-size':12,'class':'t-muted',text:o.xl},g);
+  if(o.yl)S('text',{x:14,y:(c.m.t+c.H-c.m.b)/2,'text-anchor':'middle','font-size':12,'class':'t-muted',transform:'rotate(-90 14 '+((c.m.t+c.H-c.m.b)/2)+')',text:o.yl},g);
+  return g;}
+
+/* Header band strip (Sentinel-2 visible + NIR + SWIR hues) */
+(function(){var cols=['rgb(40,70,200)','rgb(40,160,90)','rgb(200,50,40)','rgb(140,40,80)','rgb(110,40,90)','rgb(90,40,80)','rgb(120,60,40)','rgb(150,95,40)'];var bs=$('bandstrip');cols.forEach(function(c){var s=document.createElement('span');s.style.background=c;bs.appendChild(s);});})();
+
+/* ===== 1. Definições ===== */
+(function(){var defs=$('defs'),cnt=$('chipcount');var names={contato:'Ausência de contato',rad:'Radiação eletromagnética',sup:'Superfície terrestre',sens:'Sensores e imagens'};
+  document.querySelectorAll('.chips [data-k]').forEach(function(b){b.addEventListener('click',function(){var k=b.dataset.k,on=b.getAttribute('aria-pressed')!=='true';
+    document.querySelectorAll('.chips [data-k]').forEach(function(o){o.setAttribute('aria-pressed','false');});
+    defs.className='defs';
+    if(on){b.setAttribute('aria-pressed','true');defs.classList.add('hl-'+k);var n=0;defs.querySelectorAll('.def').forEach(function(d){if(d.querySelector('[data-k="'+k+'"]'))n++;});cnt.textContent=names[k]+': explícito em '+n+' de 3 definições.';}
+    else cnt.textContent='';});});})();
+
+/* ===== 1b. Diagrama do sistema ===== */
+(function(){var info={
+  fonte:['Fonte de energia','O Sol é a fonte da radiação registrada pelos sensores passivos. A energia incidente percorre a atmosfera até o alvo. Nos sensores ativos (etapa 5), o próprio sensor emite a energia.'],
+  atmosfera:['Atmosfera','A radiação atravessa a atmosfera duas vezes: no trajeto até o alvo e no retorno ao sensor. Nesse percurso, parte da energia é absorvida por gases e parte é espalhada (etapa 3).'],
+  alvo:['Alvo','Na superfície, a energia incidente divide-se entre reflexão, absorção e transmissão. A proporção depende das propriedades físico-químicas e biológicas do alvo e do comprimento de onda (etapa 4).'],
+  sensor:['Sensor','Registra a energia que retorna em faixas específicas do espectro. A grandeza de interesse é a reflectância: razão entre a energia refletida e a incidente, por comprimento de onda.']};
+  var box=$('partinfo'),btns=$('partbtns');
+  function sel(p){box.innerHTML='<strong>'+info[p][0]+'.</strong> '+info[p][1];document.querySelectorAll('#sysdiag .hot').forEach(function(g){g.classList.toggle('sel',g.dataset.part===p);});btns.querySelectorAll('button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.part===p?'true':'false');});}
+  btns.querySelectorAll('button').forEach(function(b){b.addEventListener('click',function(){sel(b.dataset.part);});});
+  document.querySelectorAll('#sysdiag .hot').forEach(function(g){g.addEventListener('click',function(){sel(g.dataset.part);});g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();sel(g.dataset.part);}});});
+  sel('fonte');
+  var sa=$('sl-abs'),st=$('sl-tra');
+  function w(p){return 1+p/100*11;}
+  function upd(src){var a=+sa.value,t=+st.value;if(a+t>100){if(src===sa){t=100-a;st.value=t;}else{a=100-t;sa.value=a;}}var r=100-a-t;
+    $('o-abs').textContent=a+'%';$('o-tra').textContent=t+'%';$('o-ref').textContent=r+'%';$('o-rho').textContent=nf(r/100,2);
+    $('ar-ref').setAttribute('stroke-width',w(r));$('ar-abs').setAttribute('stroke-width',w(a));$('ar-tra').setAttribute('stroke-width',w(t));
+    $('ar-ref').style.opacity=r?1:.15;$('ar-abs').style.opacity=a?1:.15;$('ar-tra').style.opacity=t?1:.15;
+    $('lb-ref').textContent='Refletida '+r+'%';$('lb-abs').textContent='Absorvida '+a+'%';$('lb-tra').textContent='Transmitida '+t+'%';}
+  sa.addEventListener('input',function(){upd(sa);});st.addEventListener('input',function(){upd(st);});upd(sa);})();
+
+/* ===== 2. Explorador do espectro ===== */
+(function(){var L4=Math.log10(4e-7),L7=Math.log10(7e-7),L3u=Math.log10(3e-6),L15=Math.log10(1.5e-5);
+  var R=[{n:'Raios gama',a:-13,b:-11,c:'#7c52a8',note:'Faixa não destacada na aula para o imageamento da superfície.'},
+    {n:'Raios X',a:-11,b:-8,c:'#5e5ec2',note:'Faixa não destacada na aula para o imageamento da superfície.'},
+    {n:'Ultravioleta',a:-8,b:L4,c:'#4a78cc',note:'Grande parte do ultravioleta é bloqueada pelo ozônio (O₃) da atmosfera (etapa 3).'},
+    {n:'Visível',a:L4,b:L7,c:null,note:'Sensores ópticos (Landsat, Sentinel-2, drones). No Sentinel-2: B02 (azul), B03 (verde) e B04 (vermelho).'},
+    {n:'IV próximo e médio',a:L7,b:L3u,c:'#c0503f',note:'Sensores ópticos. No Sentinel-2: B08 (IV próximo), B11 e B12 (IV de ondas curtas, SWIR).'},
+    {n:'IV termal',a:L3u,b:L15,c:'#d9772e',note:'Energia emitida pelo próprio alvo: estimativa da temperatura de superfície.'},
+    {n:'IV distante',a:L15,b:-3,c:'#8f99a4',note:'Faixa não destacada na aula para o imageamento da superfície.'},
+    {n:'Micro-ondas',a:-3,b:0,c:'#3d8f55',note:'Radar de abertura sintética (SAR): sensor ativo; a radiação atravessa nuvens.'},
+    {n:'Rádio',a:0,b:5,c:'#76848a',note:'Faixa não destacada na aula para o imageamento da superfície.'}];
+  var svg=$('specbar'),X0=-12,X1=4,ml=20,mr=20,W=720;function sx(l){return ml+(l-X0)/(X1-X0)*(W-ml-mr);}
+  var defs=S('defs',null,svg),lg=S('linearGradient',{id:'visgrad',x1:0,x2:1,y1:0,y2:0},defs);for(var nm=400;nm<=700;nm+=20)S('stop',{offset:(nm-400)/300,'stop-color':wl2rgb(nm)},lg);
+  var bar=S('g',{style:'cursor:pointer'},svg);
+  R.forEach(function(r){var x0=sx(Math.max(r.a,X0)),x1=sx(Math.min(r.b,X1));S('rect',{x:x0,y:40,width:x1-x0,height:46,fill:r.c?r.c:'url(#visgrad)'},bar);
+    if(x1-x0>50)S('text',{x:(x0+x1)/2,y:68,'text-anchor':'middle','font-size':12,style:'fill:#fff;font-weight:700',text:r.n.replace('IV ','IV ')},bar);});
+  [[-12,'1 pm'],[-9,'1 nm'],[-6,'1 µm'],[-3,'1 mm'],[0,'1 m'],[3,'1 km']].forEach(function(t){S('line',{x1:sx(t[0]),x2:sx(t[0]),y1:90,y2:96,'class':'axis'},svg);S('text',{x:sx(t[0]),y:110,'text-anchor':'middle','font-size':11,'class':'t-muted t-mono',text:t[1]},svg);});
+  S('text',{x:W/2,y:138,'text-anchor':'middle','font-size':12,'class':'t-muted',text:'Comprimento de onda (escala logarítmica)'},svg);
+  var mk=S('g',null,svg);S('line',{x1:0,x2:0,y1:30,y2:92,style:'stroke:var(--ink);stroke-width:2'},mk);S('path',{d:'M-6,22L6,22L0,31z',style:'fill:var(--ink)'},mk);
+  var mlabel=S('text',{x:0,y:16,'text-anchor':'middle','font-size':12,'class':'t-mono',style:'font-weight:500'},mk);
+  var sl=$('sl-wl');
+  bar.addEventListener('click',function(e){var p=svgPt(svg,e);var l=X0+(p.x-ml)/(W-ml-mr)*(X1-X0);sl.value=Math.max(X0,Math.min(X1,l)).toFixed(2);upd();});
+  var PFX={'-15':'f','-12':'p','-9':'n','-6':'µ','-3':'m','0':'','3':'k','6':'M','9':'G','12':'T','15':'P','18':'E','21':'Z','24':'Y'};
+  function si(v,u){var e=Math.floor(Math.log10(v)/3)*3;e=Math.max(-15,Math.min(24,e));return sig(v/Math.pow(10,e))+' '+PFX[e]+u;}
+  function wlfmt(m){if(m>=1e-2&&m<1)return sig(m*100)+' cm';return si(m,'m');}
+  function upd(){var l=+sl.value,m=Math.pow(10,l);var f=2.998e8/m,E=1.23984e-6/m;var r=R.filter(function(r){return l>=r.a&&l<r.b;})[0]||R[R.length-1];
+    $('o-wl').textContent=wlfmt(m);$('o-f').textContent=si(f,'Hz');$('o-e').textContent=si(E,'eV');$('o-reg').textContent=r.n;$('o-regnote').textContent=r.note;$('o-wlraw').textContent=nf(l,2);
+    var x=sx(l);mk.setAttribute('transform','translate('+x+',0)');mlabel.textContent=wlfmt(m);mlabel.setAttribute('text-anchor',x<60?'start':x>660?'end':'middle');
+    var col=(m>=4e-7&&m<=7e-7)?wl2rgb(m*1e9):'var(--accent)';$('wavepath').style.stroke=col;cycles=1.5+(4-l)/16*16;}
+  var cycles=8,phase=0,wp=$('wavepath');
+  function draw(){var d='';for(var x=0;x<=720;x+=3){var y=40+28*Math.sin(2*Math.PI*cycles*x/720-phase);d+=(x?'L':'M')+x+','+y.toFixed(1);}wp.setAttribute('d',d);}
+  function loop(){phase+=0.05;draw();requestAnimationFrame(loop);}
+  sl.addEventListener('input',function(){upd();if(reduceMotion)draw();});
+  document.querySelectorAll('#wlpresets [data-v]').forEach(function(b){b.addEventListener('click',function(){sl.value=Math.log10(+b.dataset.v).toFixed(2);upd();if(reduceMotion)draw();});});
+  upd();draw();if(!reduceMotion)requestAnimationFrame(loop);})();
+
+/* ===== Bandas Sentinel-2 (aproximadas, µm) ===== */
+var S2=[{b:'B02',a:.458,z:.523,c:.49,n:'azul'},{b:'B03',a:.543,z:.578,c:.56,n:'verde'},{b:'B04',a:.650,z:.680,c:.665,n:'vermelho'},{b:'B08',a:.785,z:.900,c:.842,n:'IV próximo'},{b:'B11',a:1.565,z:1.655,c:1.61,n:'SWIR 1'},{b:'B12',a:2.100,z:2.280,c:2.19,n:'SWIR 2'}];
+
+/* ===== 3. Transmitância ===== */
+(function(){var AB=[{c:.76,d:.35,w:.012,n:'O₂'},{c:.94,d:.75,w:.035,n:'vapor d’água'},{c:1.13,d:.85,w:.035,n:'vapor d’água'},{c:1.38,d:.985,w:.045,n:'vapor d’água'},{c:1.87,d:.985,w:.05,n:'vapor d’água'},{c:2.7,d:.985,w:.065,n:'vapor d’água e CO₂'},{c:4.27,d:.985,w:.03,n:'CO₂'},{c:6.3,d:.985,w:.2,n:'vapor d’água'},{c:9.6,d:.5,w:.03,n:'O₃'}];
+  function T(l){var t=.92;if(l<.36){var u=Math.max(0,(l-.3)/.06);t*=u*u*(3-2*u);}AB.forEach(function(a){var z=Math.log(l/a.c)/a.w;t*=1-a.d*Math.exp(-z*z);});return t*100;}
+  function who(l){var best=null,bv=0;AB.forEach(function(a){var z=Math.log(l/a.c)/a.w,v=a.d*Math.exp(-z*z);if(v>bv){bv=v;best=a;}});if(l<.36)return 'ozônio (O₃), que bloqueia o ultravioleta';return bv>.2?best.n:null;}
+  var svg=$('transchart'),c=chart(svg,{w:720,h:330,m:{l:56,r:16,t:44,b:42},x:[.3,15],y:[0,115],xlog:true});
+  axes(svg,c,{yt:[0,25,50,75,100],xt:[.4,.7,1,2,3,5,10],xf:function(v){return nf(v,v<1?1:0);},xl:'Comprimento de onda (µm)',yl:'Transmitância (%)'});
+  var s2g=S('g',null,svg);S2.forEach(function(b){S('rect',{x:c.sx(b.a),y:c.m.t,width:Math.max(2,c.sx(b.z)-c.sx(b.a)),height:c.H-c.m.t-c.m.b,style:'fill:var(--accent);opacity:.16'},s2g);S('text',{x:c.sx(b.c),y:c.m.t+12,'text-anchor':'middle','font-size':9,'class':'t-mono',style:'fill:var(--accent)',text:b.b},s2g);});
+  var d='M'+c.sx(.3)+','+c.sy(0),line='';for(var i=0;i<=500;i++){var l=.3*Math.pow(15/.3,i/500),x=c.sx(l),y=c.sy(T(l));d+='L'+x.toFixed(1)+','+y.toFixed(1);line+=(i?'L':'M')+x.toFixed(1)+','+y.toFixed(1);}d+='L'+c.sx(15)+','+c.sy(0)+'Z';
+  S('path',{d:d,style:'fill:var(--accent);opacity:.22'},svg);S('path',{d:line,style:'fill:none;stroke:var(--accent);stroke-width:2.2'},svg);
+  [[.4,.9,'Visível + IV próx.','var(--veg)'],[1.55,1.75,'SWIR','var(--soil)'],[2.08,2.35,'SWIR','var(--soil)'],[8,14,'IV termal','var(--red)']].forEach(function(w){S('rect',{x:c.sx(w[0]),y:14,width:c.sx(w[1])-c.sx(w[0]),height:7,rx:1,style:'fill:'+w[3]},svg);S('text',{x:(c.sx(w[0])+c.sx(w[1]))/2,y:34,'text-anchor':'middle','font-size':11,style:'font-weight:700;fill:'+w[3],text:w[2]},svg);});
+  var cur=S('g',{style:'pointer-events:none',visibility:'hidden'},svg);var cl=S('line',{y1:c.m.t,y2:c.H-c.m.b,style:'stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3'},cur);var cd=S('circle',{r:4.5,style:'fill:var(--ink)'},cur);
+  var out=$('o-trans');
+  function at(l){var t=T(l),w=who(l);cl.setAttribute('x1',c.sx(l));cl.setAttribute('x2',c.sx(l));cd.setAttribute('cx',c.sx(l));cd.setAttribute('cy',c.sy(t));cur.setAttribute('visibility','visible');
+    var inS2=S2.filter(function(b){return l>=b.a&&l<=b.z;})[0];
+    out.innerHTML='<span class="mono">λ = '+nf(l,l<1?3:2)+' µm · T ≈ '+nf(t,0)+'%</span>'+(t<60&&w?' · absorção por '+w:(t>=75?' · janela atmosférica':''))+(inS2?' · banda '+inS2.b+' do Sentinel-2':'');}
+  svg.addEventListener('pointermove',function(e){var p=svgPt(svg,e);if(p.x<c.m.l||p.x>c.W-c.m.r)return;at(c.ix(p.x));});
+  svg.addEventListener('pointerleave',function(){cur.setAttribute('visibility','hidden');});
+  $('cb-s2bands').addEventListener('change',function(e){s2g.style.display=e.target.checked?'':'none';});})();
+
+/* ===== 3b. Rayleigh ===== */
+(function(){var svg=$('raychart'),c=chart(svg,{w:460,h:250,m:{l:46,r:12,t:16,b:40},x:[.4,1],y:[0,4]});
+  axes(svg,c,{yt:[0,1,2,3,4],xt:[.4,.5,.6,.7,.8,.9,1],xf:function(v){return nf(v,1);},xl:'Comprimento de onda (µm)',yl:'Espalhamento relativo'});
+  function ray(l){return .4*Math.pow(.7/l,4);}function mie(l){return .3/l;}
+  for(var nm=400;nm<700;nm+=5)S('rect',{x:c.sx(nm/1000),y:c.sy(0)-6,width:c.sx((nm+5)/1000)-c.sx(nm/1000)+.5,height:6,fill:wl2rgb(nm+2.5)},svg);
+  function path(f){var d='';for(var i=0;i<=120;i++){var l=.4+.6*i/120;d+=(i?'L':'M')+c.sx(l).toFixed(1)+','+c.sy(Math.min(4,f(l))).toFixed(1);}return d;}
+  S('path',{d:path(ray),style:'fill:none;stroke:var(--accent);stroke-width:2.5'},svg);S('path',{d:path(mie),style:'fill:none;stroke:var(--soil);stroke-width:2.5'},svg);
+  S('text',{x:c.sx(.47),y:c.sy(3.4),'font-size':12,style:'fill:var(--accent);font-weight:700',text:'Rayleigh (moléculas) ∝ λ⁻⁴'},svg);
+  S('text',{x:c.sx(.75),y:c.sy(.62),'font-size':12,style:'fill:var(--soil);font-weight:700',text:'Mie (aerossóis)'},svg);
+  var p1=S('circle',{r:5,style:'fill:var(--surface);stroke:var(--ink);stroke-width:2'},svg),p2=S('circle',{r:5,style:'fill:var(--ink)'},svg);
+  var a=$('sl-l1'),b=$('sl-l2');
+  function upd(){var l1=+a.value,l2=+b.value;$('o-l1').textContent=nf(l1,2)+' µm';$('o-l2').textContent=nf(l2,2)+' µm';
+    p1.setAttribute('cx',c.sx(l1));p1.setAttribute('cy',c.sy(Math.min(4,ray(l1))));p2.setAttribute('cx',c.sx(l2));p2.setAttribute('cy',c.sy(Math.min(4,ray(l2))));
+    var r=Math.pow(l2/l1,4);$('o-ray').innerHTML='Razão de espalhamento Rayleigh λ₁/λ₂ = (λ₂/λ₁)⁴ = <strong class="mono">'+nf(r,2)+'×</strong>'+(l1<l2?'. O comprimento de onda menor espalha mais, o que explica o céu azul.':l1>l2?'. λ₁ é maior que λ₂, portanto espalha menos.':'.');}
+  a.addEventListener('input',upd);b.addEventListener('input',upd);upd();})();
+
+/* ===== Cena sintética ===== */
+var N=600,PIX=[1,3,5,10,20,30,60,100,200];
+var CLS=[{n:'Solo exposto',rgb:[156,127,92],red:22,nir:28},{n:'Vegetação densa',rgb:[47,138,58],red:4,nir:50},{n:'Vegetação rala',rgb:[202,186,92],red:15,nir:35},{n:'Água',rgb:[42,95,166],red:2.5,nir:.4},{n:'Área construída',rgb:[141,143,153],red:23,nir:27},{n:'Vias',rgb:[90,92,99],red:23,nir:27}];
+var scene=(function(){var cls=new Uint8Array(N*N),R=new Float32Array(N*N),G=new Float32Array(N*N),B=new Float32Array(N*N),RED=new Float32Array(N*N),NIR=new Float32Array(N*N);
+  var s=12345;function rnd(){s=(s*1664525+1013904223)>>>0;return s/4294967296;}
+  var dx=600,dy=360,len=Math.sqrt(dx*dx+dy*dy);
+  for(var y=0;y<N;y++)for(var x=0;x<N;x++){var c=0;
+    if((x-170)*(x-170)+(y-235)*(y-235)<135*135)c=1;
+    if(x>=380&&x<460&&y>=70&&y<150)c=1;
+    if(x>=466&&x<530&&y>=70&&y<150)c=2;
+    if(x>=355&&x<545&&y>=330&&y<525)c=(((x-355)%38)<6||((y-330)%38)<6)?5:4;
+    var dist=Math.abs(x*dy-(y-140)*dx)/len;if(dist<11)c=3;
+    var i=y*N+x,k=CLS[c],n=(rnd()-.5)*14,m=(rnd()-.5)*2;cls[i]=c;R[i]=k.rgb[0]+n;G[i]=k.rgb[1]+n;B[i]=k.rgb[2]+n;RED[i]=Math.max(.1,k.red+m);NIR[i]=Math.max(.1,k.nir+m*1.4);}
+  return {cls:cls,R:R,G:G,B:B,RED:RED,NIR:NIR};})();
+function ndviColor(v){var st=[[-1,[165,0,38]],[0,[253,174,97]],[.2,[255,255,191]],[.5,[166,217,106]],[1,[0,104,55]]];for(var i=1;i<st.length;i++){if(v<=st[i][0]){var a=st[i-1],b=st[i],t=(v-a[0])/(b[0]-a[0]);return [a[1][0]+(b[1][0]-a[1][0])*t,a[1][1]+(b[1][1]-a[1][1])*t,a[1][2]+(b[1][2]-a[1][2])*t];}}return st[4][1];}
+function renderScene(cv,p,mode,haze){var ctx=cv.getContext('2d'),img=ctx.createImageData(N,N),d=img.data,h=(haze||0)/100,hz=[205,214,228];
+  for(var by=0;by<N;by+=p)for(var bx=0;bx<N;bx+=p){var r=0,g=0,b=0,rd=0,ni=0,n=0;
+    for(var y=by;y<by+p;y++)for(var x=bx;x<bx+p;x++){var i=y*N+x;r+=scene.R[i];g+=scene.G[i];b+=scene.B[i];rd+=scene.RED[i];ni+=scene.NIR[i];n++;}
+    var col;if(mode==='ndvi'){col=ndviColor((ni-rd)/(ni+rd));}else{col=[r/n,g/n,b/n];}
+    if(h){col=[col[0]*(1-h)+hz[0]*h,col[1]*(1-h)+hz[1]*h,col[2]*(1-h)+hz[2]*h];}
+    for(var y2=by;y2<by+p;y2++)for(var x2=bx;x2<bx+p;x2++){var j=(y2*N+x2)*4;d[j]=col[0];d[j+1]=col[1];d[j+2]=col[2];d[j+3]=255;}}
+  ctx.putImageData(img,0,0);}
+function blockInfo(cv,e,p){var r=cv.getBoundingClientRect();var x=Math.floor((e.clientX-r.left)/r.width*N),y=Math.floor((e.clientY-r.top)/r.height*N);if(x<0||y<0||x>=N||y>=N)return null;
+  var bx=Math.floor(x/p)*p,by=Math.floor(y/p)*p,cnt=[0,0,0,0,0,0],rd=0,ni=0,n=0;for(var yy=by;yy<by+p;yy++)for(var xx=bx;xx<bx+p;xx++){var i=yy*N+xx;cnt[scene.cls[i]]++;rd+=scene.RED[i];ni+=scene.NIR[i];n++;}
+  return {ndvi:(ni-rd)/(ni+rd),red:rd/n,nir:ni/n,cnt:cnt,n:n};}
+function compText(b){var parts=[];b.cnt.forEach(function(v,i){if(v)parts.push({n:CLS[i].n,p:v/b.n});});parts.sort(function(a,c){return c.p-a.p;});
+  return parts.length===1?parts[0].n+' (pixel puro)':'pixel misto: '+parts.slice(0,3).map(function(q){return q.n.toLowerCase()+' '+nf(q.p*100,0)+'%';}).join(', ');}
+
+/* 3c. Bruma */
+(function(){var cv=$('cv-haze'),sl=$('sl-haze');function upd(){var h=+sl.value;$('o-haze').textContent=h+'%';renderScene(cv,1,'rgb',h);$('o-contrast').innerHTML='Contraste relativo entre o alvo mais claro e o mais escuro: <strong class="mono">'+nf(1-h/100,2)+'</strong> do original.';}
+  sl.addEventListener('input',upd);upd();})();
+
+/* ===== 4. Assinaturas espectrais ===== */
+(function(){var D={
+  veg:{n:'Vegetação sadia',c:'var(--veg)',p:[[.45,4],[.5,5],[.55,11],[.6,8],[.65,5],[.68,4],[.7,12],[.74,35],[.78,48],[.84,50],[1,49],[1.1,48],[1.25,46],[1.45,22],[1.65,30],[1.9,12],[2.2,16],[2.4,14]]},
+  soil:{n:'Solo exposto',c:'var(--soil)',p:[[.45,6],[.5,8],[.55,11],[.65,17],[.7,20],[.8,24],[.85,26],[.9,27],[1,29],[1.1,30],[1.25,31],[1.45,31],[1.65,34],[1.9,31],[2.2,33],[2.4,31]]},
+  water:{n:'Água',c:'var(--water)',p:[[.45,6.5],[.5,5.5],[.55,4.5],[.6,3],[.65,2.5],[.7,1.8],[.75,1],[.8,.6],[.9,.4],[1,.3],[1.2,.2],[2.4,.1]]},
+  snow:{n:'Neve',c:'var(--snow)',p:[[.45,85],[.55,87],[.65,85],[.75,82],[.8,80],[.9,60],[1,40],[1.1,20],[1.25,15],[1.45,3],[1.65,6],[1.9,2],[2.2,3],[2.4,2]],dash:true}};
+  var svg=$('sigchart'),c=chart(svg,{w:720,h:380,m:{l:52,r:16,t:16,b:42},x:[.45,2.4],y:[0,100]});
+  var bandG=S('g',null,svg);axes(svg,c,{yt:[0,20,40,60,80,100],xt:[.5,.75,1,1.25,1.5,1.75,2,2.25],xf:function(v){return nf(v,2);},xl:'Comprimento de onda (µm)',yl:'Reflectância (%)'});
+  var sel='B08',rects={};
+  S2.forEach(function(b){var g=S('g',{tabindex:0,role:'button','aria-label':'Banda '+b.b+' ('+b.n+')',style:'cursor:pointer'},bandG);
+    rects[b.b]=S('rect',{x:c.sx(b.a),y:c.m.t,width:c.sx(b.z)-c.sx(b.a),height:c.H-c.m.t-c.m.b,style:'fill:var(--surface-2)'},g);
+    S('text',{x:c.sx(b.c),y:c.m.t+14,'text-anchor':'middle','font-size':11,'class':'t-mono',text:b.b},g);
+    g.addEventListener('click',function(){pick(b.b);});g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(b.b);}});});
+  var paths={};Object.keys(D).forEach(function(k){var d='';D[k].p.forEach(function(q,i){d+=(i?'L':'M')+c.sx(q[0]).toFixed(1)+','+c.sy(q[1]).toFixed(1);});paths[k]=S('path',{d:d,style:'fill:none;stroke:'+D[k].c+';stroke-width:2.6'+(D[k].dash?';stroke-dasharray:7 5':'')},svg);});
+  var ann=S('g',{'font-size':11.5},svg);
+  S('text',{x:c.sx(.69),y:c.sy(-1)-14,style:'fill:var(--veg)',text:'Clorofila absorve o vermelho'},ann);
+  S('text',{x:c.sx(.93),y:c.sy(56),style:'fill:var(--veg)',text:'Estrutura foliar: platô no IV próximo'},ann);
+  S('text',{x:c.sx(1.3),y:c.sy(8),style:'fill:var(--water)',text:'Água não reflete no IV'},ann);
+  var cur=S('g',{style:'pointer-events:none',visibility:'hidden'},svg),cl=S('line',{y1:c.m.t,y2:c.H-c.m.b,style:'stroke:var(--ink);stroke-dasharray:3 3'},cur),dots={},tip=S('g',null,cur),tipbg=S('rect',{rx:5,style:'fill:var(--surface);stroke:var(--line)'},tip),tiptx=S('text',{'font-size':12,'class':'t-mono'},tip);
+  Object.keys(D).forEach(function(k){dots[k]=S('circle',{r:4,style:'fill:'+D[k].c},cur);});
+  function vis(k){return document.querySelector('#sigtoggles [data-t="'+k+'"]').getAttribute('aria-pressed')==='true';}
+  svg.addEventListener('pointermove',function(e){var p=svgPt(svg,e);if(p.x<c.m.l||p.x>c.W-c.m.r){cur.setAttribute('visibility','hidden');return;}var l=c.ix(p.x);cl.setAttribute('x1',p.x);cl.setAttribute('x2',p.x);
+    while(tiptx.firstChild)tiptx.removeChild(tiptx.firstChild);S('tspan',{x:0,dy:0,style:'font-weight:500',text:'λ = '+nf(l,2)+' µm'},tiptx);var rows=1;
+    Object.keys(D).forEach(function(k){var v=interp(D[k].p,l);dots[k].setAttribute('cx',p.x);dots[k].setAttribute('cy',c.sy(v));dots[k].style.display=vis(k)?'':'none';if(vis(k)){S('tspan',{x:0,dy:16,style:'fill:'+D[k].c,text:D[k].n+': '+nf(v,1)+'%'},tiptx);rows++;}});
+    var tw=170,th=rows*16+10,tx=p.x+12+tw>c.W-c.m.r?p.x-tw-12:p.x+12;tip.setAttribute('transform','translate('+tx+','+(c.m.t+26)+')');tipbg.setAttribute('width',tw);tipbg.setAttribute('height',th);tipbg.setAttribute('x',-8);tipbg.setAttribute('y',-16);
+    cur.setAttribute('visibility','visible');});
+  svg.addEventListener('pointerleave',function(){cur.setAttribute('visibility','hidden');});
+  var tb=document.querySelector('#bandtable tbody');
+  function pick(bn){sel=bn;S2.forEach(function(b){rects[b.b].style.fill=b.b===bn?'color-mix(in srgb,var(--accent) 28%,transparent)':'var(--surface-2)';});
+    var b=S2.filter(function(x){return x.b===bn;})[0];document.querySelector('#bandtable th').textContent='Alvo · '+b.b+' ('+b.n+', ≈'+nf(b.c,3)+' µm)';
+    tb.innerHTML='';Object.keys(D).forEach(function(k){var v=0,n=0;for(var l=b.a;l<=b.z;l+=.002){v+=interp(D[k].p,l);n++;}v/=n;var tr=document.createElement('tr');
+      tr.innerHTML='<td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px;background:'+D[k].c+'"></span>'+D[k].n+'</td><td class="mono">'+nf(v,1)+'%</td><td style="width:45%"><div style="height:8px;border-radius:2px;background:'+D[k].c+';width:'+Math.max(1,v)+'%"></div></td>';tb.appendChild(tr);});}
+  document.querySelectorAll('#sigtoggles [data-t]').forEach(function(b){b.addEventListener('click',function(){var on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on?'true':'false');paths[b.dataset.t].style.display=on?'':'none';});});
+  pick('B08');})();
+
+/* ===== 5a. Passivo x ativo ===== */
+(function(){var svg=$('padiag');var day=true,clear=true;
+  var mk=S('defs',null,svg);[['pa-sun','var(--soil)'],['pa-ref','var(--veg)'],['pa-pul','var(--pulse)'],['pa-echo','var(--red)']].forEach(function(m){var e=S('marker',{id:m[0],viewBox:'0 0 10 10',refX:8,refY:5,markerWidth:12,markerHeight:12,markerUnits:'userSpaceOnUse',orient:'auto'},mk);S('path',{d:'M0,0L10,5L0,10z',style:'fill:'+m[1]},e);});
+  function panel(x0,title,col){S('text',{x:x0+170,y:20,'text-anchor':'middle','font-size':14,style:'font-weight:700;fill:'+col,text:title},svg);S('rect',{x:x0,y:238,width:340,height:42,style:'fill:var(--soil);opacity:.5'},svg);S('rect',{x:x0+120,y:228,width:100,height:11,style:'fill:var(--veg)'},svg);S('text',{x:x0+170,y:265,'text-anchor':'middle','font-size':12,style:'font-weight:700',text:'Alvo'},svg);}
+  panel(0,'Passivo: usa a energia do Sol','var(--soil)');panel(380,'Ativo: emite a própria energia','var(--pulse)');
+  var sun=S('circle',{cx:50,cy:62,r:22,fill:'#f2b705'},svg);var moon=S('path',{d:'M58,44a20,20 0 1,0 0,36a16,16 0 1,1 0,-36z',style:'fill:var(--snow)'},svg);
+  S('rect',{x:240,y:40,width:90,height:26,rx:4,style:'fill:var(--ink)'},svg);S('text',{x:285,y:58,'text-anchor':'middle','font-size':12,style:'fill:var(--bg);font-weight:700',text:'Sensor'},svg);
+  S('rect',{x:395,y:40,width:120,height:26,rx:4,style:'fill:var(--ink)'},svg);S('text',{x:455,y:58,'text-anchor':'middle','font-size':12,style:'fill:var(--bg);font-weight:700',text:'Sensor + emissor'},svg);
+  function cloud(cx){var g=S('g',null,svg);[[0,0,46,18],[-34,6,30,14],[34,6,32,14],[10,-10,28,14]].forEach(function(e){S('ellipse',{cx:cx+e[0],cy:140+e[1],rx:e[2],ry:e[3],style:'fill:var(--surface-2);stroke:var(--snow);stroke-width:1'},g);});return g;}
+  var c1=cloud(150),c2=cloud(530);
+  var pin=S('line',{x1:68,y1:80,x2:160,y2:224,style:'stroke:var(--soil)','stroke-width':3,'marker-end':'url(#pa-sun)'},svg);
+  var pout=S('line',{x1:185,y1:224,x2:270,y2:72,style:'stroke:var(--veg)','stroke-width':3,'marker-end':'url(#pa-ref)'},svg);
+  var aout=S('line',{x1:440,y1:72,x2:500,y2:222,style:'stroke:var(--pulse)','stroke-width':3,'marker-end':'url(#pa-pul)'},svg);
+  S('line',{x1:540,y1:222,x2:480,y2:74,style:'stroke:var(--red);stroke-dasharray:7 5','stroke-width':3,'marker-end':'url(#pa-echo)'},svg);
+  S('text',{x:600,y:96,'font-size':12,style:'fill:var(--pulse);font-weight:700',text:'pulso emitido'},svg);S('text',{x:600,y:114,'font-size':12,style:'fill:var(--red);font-weight:700',text:'eco medido'},svg);S('text',{x:600,y:130,'font-size':11,'class':'t-muted',text:'(tempo e intensidade)'},svg);
+  var st1=S('text',{x:170,y:298,'text-anchor':'middle','font-size':12,'class':'t-muted'},svg),st2=S('text',{x:550,y:298,'text-anchor':'middle','font-size':12,'class':'t-muted'},svg);
+  svg.setAttribute('viewBox','0 0 720 306');
+  var SENS=[{n:'Câmera óptica / multiespectral',t:'Passivo',f:function(){return !day?['no','Não registra','Sem iluminação solar']:!clear?['mid','Registra o topo das nuvens','A nuvem reflete a luz solar antes da superfície']:['ok','Registra a superfície','Energia solar refletida pelo alvo'];}},
+    {n:'Radiômetro termal',t:'Passivo',f:function(){return !clear?['mid','Registra o topo das nuvens','A emissão registrada provém da nuvem']:['ok','Registra a superfície','Energia emitida pelo próprio alvo, de dia e de noite'];}},
+    {n:'Radar (SAR)',t:'Ativo',f:function(){return ['ok','Registra a superfície','Emite micro-ondas, que atravessam nuvens; opera de dia e de noite'];}},
+    {n:'LiDAR',t:'Ativo',f:function(){return !clear?['mid','Limitado','Pulso óptico interrompido por nuvens espessas [conferir em referência específica]']:['ok','Registra a superfície','Emite pulsos de laser; opera de dia e de noite'];}}];
+  function upd(){sun.style.display=day?'':'none';moon.style.display=day?'none':'';c1.style.display=clear?'none':'';c2.style.display=clear?'none':'';
+    pin.style.display=day?'':'none';pin.setAttribute('x2',clear?160:128);pin.setAttribute('y2',clear?224:124);
+    pout.style.display=day?'':'none';pout.setAttribute('x1',clear?185:175);pout.setAttribute('y1',clear?224:128);
+    st1.textContent=!day?'Sem fonte de iluminação: o sensor óptico não registra o alvo':!clear?'A nuvem reflete a energia antes que ela alcance o alvo':'Depende da luz solar (ou da emissão do alvo)';
+    st2.textContent='Funciona de dia e de noite; o radar atravessa nuvens';
+    var tb=$('patable');tb.innerHTML='';SENS.forEach(function(s){var r=s.f(),tr=document.createElement('tr');tr.innerHTML='<td>'+s.n+'</td><td>'+s.t+'</td><td><span class="pill '+r[0]+'">'+r[1]+'</span></td><td class="muted">'+r[2]+'</td>';tb.appendChild(tr);});}
+  segGroup($('seg-day'),function(v){day=v==='1';upd();});segGroup($('seg-sky'),function(v){clear=v==='1';upd();});upd();})();
+
+/* ===== 5c. Resolução espectral ===== */
+(function(){var V=[[.4,6],[.45,6],[.5,8],[.55,13],[.6,9],[.65,6],[.68,5],[.7,9],[.75,40],[.78,56],[.84,58],[.95,58.5],[1.1,57],[1.25,50],[1.45,40],[1.65,45],[1.9,32],[2.05,33],[2.2,34],[2.4,33],[2.5,33]];
+  var svg=$('specres'),c=chart(svg,{w:720,h:260,m:{l:40,r:16,t:16,b:42},x:[.4,2.5],y:[0,70]});
+  axes(svg,c,{xt:[.5,.75,1,1.25,1.5,1.75,2,2.25,2.5],xf:function(v){return nf(v,2);},xl:'Comprimento de onda (µm)'});
+  var d='';for(var l=.4;l<=2.5001;l+=.01)d+=(l>.4?'L':'M')+c.sx(l).toFixed(1)+','+c.sy(interp(V,l)).toFixed(1);
+  var lay=S('g',null,svg);S('path',{d:d,style:'fill:none;stroke:var(--snow);stroke-width:2'},svg);
+  function avg(a,z){var s=0,n=0;for(var l=a;l<=z+1e-9;l+=.002){s+=interp(V,l);n++;}return s/n;}
+  var MB=[[.458,.523],[.543,.578],[.650,.680],[.698,.713],[.733,.748],[.773,.793],[.785,.900],[1.565,1.655],[2.100,2.280]];
+  var txt={pan:'<strong>Pancromático:</strong> uma única banda larga (aprox. 0,50 a 0,90 µm). O sensor registra apenas a intensidade integrada, exibida em tons de cinza; a forma da curva não é recuperada.',
+    multi:'<strong>Multiespectral:</strong> poucas bandas largas e discretas (exemplo: '+MB.length+' bandas do Sentinel-2 entre o visível e o SWIR). A curva é representada por médias em faixas separadas.',
+    hiper:'<strong>Hiperespectral:</strong> centenas de bandas estreitas e contíguas (exemplo: 211 bandas de 10 nm). A curva é reconstruída de forma quase contínua.'};
+  function draw(m){while(lay.firstChild)lay.removeChild(lay.firstChild);
+    if(m==='pan'){S('rect',{x:c.sx(.5),y:c.sy(avg(.5,.9)),width:c.sx(.9)-c.sx(.5),height:c.sy(0)-c.sy(avg(.5,.9)),style:'fill:var(--muted);opacity:.55'},lay);S('text',{x:c.sx(.7),y:c.sy(avg(.5,.9))-8,'text-anchor':'middle','font-size':12,style:'font-weight:700',text:'banda única'},lay);}
+    if(m==='multi'){MB.forEach(function(b){var v=avg(b[0],b[1]);S('rect',{x:c.sx(b[0]),y:c.sy(v),width:Math.max(2,c.sx(b[1])-c.sx(b[0])),height:c.sy(0)-c.sy(v),style:'fill:var(--accent);opacity:.8'},lay);});}
+    if(m==='hiper'){var dd='';for(var i=0;i<211;i++){var a=.4+i*.01,v=avg(a,a+.01);dd+=(i?'L':'M')+c.sx(a+.005).toFixed(1)+','+c.sy(v).toFixed(1);S('circle',{cx:c.sx(a+.005),cy:c.sy(v),r:1.6,style:'fill:var(--veg)'},lay);}S('path',{d:dd,style:'fill:none;stroke:var(--veg);stroke-width:1.5'},lay);}
+    $('o-specres').innerHTML=txt[m];}
+  segGroup($('seg-spec'),draw);draw('multi');})();
+
+/* ===== 5d. Resolução espacial ===== */
+(function(){var cv=$('cv-spatial'),sl=$('sl-pix'),sw=$('sw-classes');
+  CLS.forEach(function(k){var d=document.createElement('span');d.innerHTML='<i style="background:rgb('+k.rgb.join(',')+')"></i>'+k.n;sw.appendChild(d);});
+  function upd(){var p=PIX[+sl.value];$('o-pix').textContent=p+' m';var n=N/p;$('o-npix').textContent=n+' × '+n+' = '+(n*n).toLocaleString('pt-BR');
+    $('o-cat').textContent=p<=3?'Alta resolução espacial':p<=30?'Média resolução espacial':p<100?'Intermediária':'Baixa resolução espacial';renderScene(cv,p,'rgb',0);}
+  sl.addEventListener('input',upd);upd();})();
+
+/* ===== 5e. Resolução radiométrica ===== */
+(function(){var cv=$('cv-quant'),sl=$('sl-bits'),svg=$('quantchart');var c=chart(svg,{w:460,h:180,m:{l:52,r:10,t:12,b:30},x:[0,600],y:[.4935,.5065]});
+  axes(svg,c,{yt:[.495,.5,.505],yf:function(v){return nf(v*100,1)+'%';},xl:'Posição ao longo de um perfil da imagem'});
+  function sgn(x){return .5+.004*Math.sin(2*Math.PI*x/150)+.002*Math.sin(2*Math.PI*x/37);}
+  var d='';for(var x=0;x<=600;x+=2)d+=(x?'L':'M')+c.sx(x).toFixed(1)+','+c.sy(sgn(x)).toFixed(1);
+  S('path',{d:d,style:'fill:none;stroke:var(--snow);stroke-width:1.5'},svg);var q=S('path',{style:'fill:none;stroke:var(--accent);stroke-width:2'},svg);
+  S('text',{x:c.W-c.m.r,y:c.m.t+10,'text-anchor':'end','font-size':11,'class':'t-muted',text:'cinza: sinal · azul: valor registrado'},svg);
+  var ctx=cv.getContext('2d');
+  function upd(){var n=+sl.value,L=Math.pow(2,n);$('o-bits').textContent=n+(n>1?' bits':' bit');$('o-levels').textContent=L.toLocaleString('pt-BR');$('o-step').textContent=sig(100/(L-1),3)+'% da escala';
+    for(var x=0;x<600;x++){var v=x/599,k=Math.min(L-1,Math.floor(v*L)),g=Math.round(k/(L-1)*255);ctx.fillStyle='rgb('+g+','+g+','+g+')';ctx.fillRect(x,0,1,46);}
+    var dd='';for(var x2=0;x2<=600;x2+=1){var y=Math.round(sgn(x2)*(L-1))/(L-1);y=Math.max(.4935,Math.min(.5065,y));dd+=(x2?'L':'M')+c.sx(x2).toFixed(1)+','+c.sy(y).toFixed(1);}q.setAttribute('d',dd);}
+  sl.addEventListener('input',upd);upd();})();
+
+/* ===== 6. Listas de verificação ===== */
+function checklist(listId,barId,key){var saved=store.get(key,{}),list=$(listId);var boxes=list.querySelectorAll('input[type=checkbox]');
+  function upd(){var n=0;boxes.forEach(function(b){b.closest('li').classList.toggle('done',b.checked);if(b.checked)n++;});$(barId).style.width=(n/boxes.length*100)+'%';}
+  boxes.forEach(function(b){b.checked=!!saved[b.id];b.addEventListener('change',function(){saved[b.id]=b.checked;store.set(key,saved);upd();});});upd();}
+checklist('ck-dl','pg-dl','sr-ck-dl');checklist('ck-qgis','pg-qgis','sr-ck-qgis');
+
+/* ===== 6b. NDVI ===== */
+(function(){var P=[{n:'Vegetação densa',r:4,i:50,v:.85,c:'var(--veg)'},{n:'Vegetação rala',r:15,i:35,v:.40,c:'color-mix(in srgb,var(--veg) 55%,#c9d86a)'},{n:'Solo exposto',r:22,i:28,v:.12,c:'var(--soil)'},{n:'Área construída',r:23,i:27,v:.08,c:'var(--urban)'},{n:'Água',r:2.5,i:.4,v:-.72,c:'var(--water)'}];
+  var sr=$('sl-red'),si=$('sl-nir'),pr=$('ndvipresets');
+  P.forEach(function(p){var b=document.createElement('button');b.className='chip';b.textContent=p.n;b.addEventListener('click',function(){sr.value=p.r;si.value=p.i;upd();});pr.appendChild(b);});
+  function cls(v){return v<0?'Água, neve, nuvem':v<.2?'Solo exposto, rocha, áreas construídas':v<.5?'Vegetação rala ou em estresse':'Vegetação densa e vigorosa';}
+  function pos(v){return v<0?(v+1)*50:v<.2?50+v/.2*10:v<.5?60+(v-.2)/.3*15:75+(v-.5)/.5*25;}
+  function upd(){var r=+sr.value,i=+si.value;$('o-red').textContent=nf(r,1)+'%';$('o-nir').textContent=nf(i,1)+'%';
+    if(r+i===0){$('o-ndvi').textContent='indefinido';$('o-ndviclass').textContent='NIR + RED = 0';return;}
+    var v=(i-r)/(i+r);$('o-ndvi').textContent=nf(v,2);$('o-ndviclass').textContent=cls(v);$('ndvimark').style.left=pos(v)+'%';}
+  sr.addEventListener('input',upd);si.addEventListener('input',upd);upd();
+  var svg=$('ndvibars'),c=chart(svg,{w:460,h:250,m:{l:118,r:44,t:12,b:40},x:[-1,1],y:[0,1]});
+  axes(svg,c,{xt:[-1,-.5,0,.5,1],xf:function(v){return nf(v,1);},xl:'NDVI (valores ilustrativos, slide 20)'});
+  S('line',{x1:c.sx(0),x2:c.sx(0),y1:c.m.t,y2:c.H-c.m.b,style:'stroke:var(--ink)'},svg);
+  var bh=(c.H-c.m.t-c.m.b)/P.length;P.forEach(function(p,k){var y=c.m.t+k*bh+bh*.2,x0=c.sx(Math.min(0,p.v)),x1=c.sx(Math.max(0,p.v));
+    S('rect',{x:x0,y:y,width:x1-x0,height:bh*.6,style:'fill:'+p.c},svg);S('text',{x:c.m.l-8,y:y+bh*.3+4,'text-anchor':'end','font-size':12,text:p.n},svg);
+    S('text',{x:p.v<0?x0-4:x1+4,y:y+bh*.3+4,'text-anchor':p.v<0?'end':'start','font-size':12,'class':'t-mono',style:'font-weight:500',text:nf(p.v,2)},svg);});})();
+
+/* ===== 6c. Expressão e mapa NDVI ===== */
+$('btn-copy').addEventListener('click',function(){var t=$('qexpr').textContent,b=this;function ok(){b.textContent='Copiada';setTimeout(function(){b.textContent='Copiar expressão';},1600);}
+  function fb(){var r=document.createRange();r.selectNodeContents($('qexpr'));var s=window.getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Selecionada: use Ctrl+C';}
+  try{navigator.clipboard.writeText(t).then(ok,fb);}catch(e){fb();}});
+(function(){var cv=$('cv-ndvi'),sl=$('sl-pix2'),out=$('o-ndvihover');function p(){return PIX[+sl.value];}
+  function upd(){$('o-pix2').textContent=p()+' m';renderScene(cv,p(),'ndvi',0);}
+  cv.addEventListener('pointermove',function(e){var b=blockInfo(cv,e,p());if(!b)return;out.innerHTML='<span class="mono">NDVI = '+nf(b.ndvi,2)+' · B04 '+nf(b.red,1)+'% · B08 '+nf(b.nir,1)+'%</span> · '+compText(b);});
+  sl.addEventListener('input',upd);upd();})();
+
+/* ===== Discussão ===== */
+(function(){var Q=[
+  {q:'Que faixa do espectro é mais adequada para mapear vegetação? E corpos d’água?',l:[['#alvos','4. Assinatura espectral'],['#atmosfera','3. Janelas atmosféricas']]},
+  {q:'Que sensor e resoluções escolher para monitorar uma área urbana?',l:[['#sensores','5. Resoluções e compromisso']]},
+  {q:'Quando o LiDAR aéreo é preferível à imagem óptica?',l:[['#sensores','5. Sensores passivos e ativos']]},
+  {q:'Por que o radar é útil em regiões com nuvens frequentes?',l:[['#radiacao','2. Micro-ondas no espectro'],['#sensores','5. Passivo x ativo']]},
+  {q:'Por que a vegetação sadia apresenta NDVI alto?',l:[['#alvos','4. Vermelho x IV próximo'],['#pratica','6. NDVI']]},
+  {q:'Como a assinatura espectral explica o resultado?',l:[['#alvos','4. Assinatura espectral']]},
+  {q:'Que efeito têm nuvens e sombras sobre o índice?',l:[['#atmosfera','3. Atmosfera'],['#pratica','6. Tabela de interpretação']]},
+  {q:'O que muda ao usar outra data ou outra estação do ano?',l:[['#sensores','5. Resolução temporal']]}];
+  var notes=store.get('sr-notes',{}),box=$('qs');
+  Q.forEach(function(q,i){var d=document.createElement('div');d.className='q';var links=q.l.filter(function(x){return x[1];}).map(function(x){return '<a href="'+x[0]+'">'+x[1]+'</a>';}).join(' · ');
+    d.innerHTML='<span class="eyebrow">'+(i<4?'Slide 18':'Slide 22')+'</span><p>'+q.q+'</p><div class="links">Retomar: '+links+'</div><label class="small muted" for="nt-'+i+'">Anotações</label><textarea id="nt-'+i+'" placeholder="Registre aqui os argumentos e as evidências."></textarea>';
+    box.appendChild(d);var ta=d.querySelector('textarea');ta.value=notes[i]||'';ta.addEventListener('input',function(){notes[i]=ta.value;store.set('sr-notes',notes);});});})();
+
+/* ===== Navegação ativa ===== */
+(function(){var links=document.querySelectorAll('#navlinks a'),map={};links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a;});
+  if(!('IntersectionObserver' in window))return;var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.remove('on');});var a=map[e.target.id];if(a){a.classList.add('on');try{a.scrollIntoView({block:'nearest',inline:'nearest'});}catch(_){}}}});},{rootMargin:'-45% 0px -50% 0px'});
+  document.querySelectorAll('main .step').forEach(function(s){io.observe(s);});})();
+})();
+</script>
+</body>
+</html>
