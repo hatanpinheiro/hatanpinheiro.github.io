@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Aulas interativas de Sensoriamento Remoto, Prof. Hatan Pinheiro: fundamentos e classificação de imagens.">
+<title>Aulas de Sensoriamento Remoto</title>
+<script>try{if(localStorage.getItem("sr-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="comum.css">
+<style>
+.days-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;padding-block:36px 12px}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:12px;display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;min-width:0}
+.day-head{background:var(--accent);color:var(--accent-ink);padding:18px 22px;display:grid;gap:4px}
+.day-head .eyebrow{color:inherit;opacity:.85}
+.day-head h2{font-size:1.65rem}
+.day-head p{opacity:.92}
+.day ol{list-style:none;margin:0;padding:10px 12px;display:grid;gap:2px}
+.day ol a{display:grid;grid-template-columns:2em minmax(0,1fr);gap:8px;padding:8px 10px;border-radius:6px;text-decoration:none;color:var(--ink)}
+.day ol a:hover{background:var(--surface-2)}
+.day ol .n{font-family:var(--font-mono);color:var(--accent)}
+.day ol small{display:block;color:var(--muted);font-size:.86rem}
+.day-foot{display:flex;flex-wrap:wrap;gap:8px;padding:14px 22px 20px;border-top:1px solid var(--line)}
+.day-foot a{text-decoration:none}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.themes{padding-block:28px 48px}
+.themes table td:first-child{font-weight:600;white-space:nowrap}
+@media (max-width:820px){.days-grid{grid-template-columns:minmax(0,1fr)}}
+</style>
+<script src="comum.js" defer></script>
+</head>
+<body>
+<div class="topbar"><div class="wrap">
+  <a class="brand" href="./">Sensoriamento Remoto<small>Prof. Hatan Pinheiro</small></a>
+  <nav class="days" aria-label="Dias de aula">
+    <a href="fundamentos/"><b>Dia 1</b>Fundamentos</a>
+    <a href="classificacao/"><b>Dia 2</b>Classificação</a>
+  </nav>
+  <button class="theme-btn" type="button" data-theme-toggle aria-pressed="false">Modo escuro</button>
+</div></div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Disciplina de Sensoriamento Remoto · Graduação · Prof. Hatan Pinheiro</p>
+    <h1 style="margin-top:10px">Aulas de Sensoriamento Remoto</h1>
+    <p class="lead" style="max-width:62ch">Material interativo organizado por dia de aula. O primeiro dia apresenta os fundamentos físicos e o cálculo do NDVI; o segundo, a classificação de imagens e a avaliação da acurácia, com prática no QGIS.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="days-grid">
+    <article class="day">
+      <div class="day-head">
+        <span class="eyebrow">Dia 1</span>
+        <h2>Fundamentos de Sensoriamento Remoto</h2>
+        <p>Radiação, espectro, alvos, sensores e aplicação prática com Sentinel-2.</p>
+      </div>
+      <ol>
+        <li><a href="fundamentos/#conceito"><span class="n">1</span><span>Conceito e componentes do sistema<small>Definições, fonte, atmosfera, alvo e sensor</small></span></a></li>
+        <li><a href="fundamentos/#radiacao"><span class="n">2</span><span>Radiação eletromagnética e espectro<small>Comprimento de onda, frequência e energia</small></span></a></li>
+        <li><a href="fundamentos/#atmosfera"><span class="n">3</span><span>Atmosfera<small>Absorção, espalhamento e janelas atmosféricas</small></span></a></li>
+        <li><a href="fundamentos/#alvos"><span class="n">4</span><span>Interação com os alvos<small>Reflectância e assinatura espectral</small></span></a></li>
+        <li><a href="fundamentos/#sensores"><span class="n">5</span><span>Sensores, plataformas e resoluções<small>Passivos e ativos; espectral, espacial, radiométrica e temporal</small></span></a></li>
+        <li><a href="fundamentos/#pratica"><span class="n">6</span><span>Atividade prática<small>Download do Sentinel-2 e NDVI no QGIS</small></span></a></li>
+      </ol>
+      <div class="day-foot"><a class="btn primary" href="fundamentos/">Abrir o Dia 1</a></div>
+    </article>
+
+    <article class="day">
+      <div class="day-head">
+        <span class="eyebrow">Dia 2</span>
+        <h2>Classificação de Imagens</h2>
+        <p>Do pixel ao mapa temático: métodos, algoritmos e avaliação da acurácia.</p>
+      </div>
+      <ol>
+        <li><a href="classificacao/#mapa"><span class="n">1</span><span>Da imagem ao mapa temático<small>Pixel, assinatura e pixel misto</small></span></a></li>
+        <li><a href="classificacao/#atributos"><span class="n">2</span><span>Espaço de atributos<small>Dispersão entre bandas e separabilidade</small></span></a></li>
+        <li><a href="classificacao/#kmedias"><span class="n">3</span><span>Não supervisionada<small>K-médias passo a passo</small></span></a></li>
+        <li><a href="classificacao/#supervisionada"><span class="n">4</span><span>Supervisionada<small>Distância mínima, paralelepípedo, MaxVer, k-NN e Random Forest</small></span></a></li>
+        <li><a href="classificacao/#objeto"><span class="n">5</span><span>Pixel e objeto (GEOBIA)<small>Segmentação e efeito “sal e pimenta”</small></span></a></li>
+        <li><a href="classificacao/#acuracia"><span class="n">6</span><span>Avaliação da acurácia<small>Matriz de confusão, kappa, quantidade e alocação</small></span></a></li>
+        <li><a href="classificacao/#pratica"><span class="n">7</span><span>Atividade prática<small>Classificação no QGIS com o dzetsaka</small></span></a></li>
+      </ol>
+      <div class="day-foot">
+        <a class="btn primary" href="classificacao/">Abrir o Dia 2</a>
+        <a class="btn" href="classificacao/slides/Aula2_Classificacao.pdf">Slides (PDF)</a>
+        <a class="btn" href="classificacao/slides/Aula2_Classificacao.pptx">Slides (PPTX)</a>
+      </div>
+    </article>
+  </div>
+
+  <section class="themes">
+    <h2 style="font-size:1.4rem;margin-bottom:12px">Temas por dia</h2>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Tema</th><th>Dia 1 · Fundamentos</th><th>Dia 2 · Classificação</th></tr></thead>
+      <tbody>
+        <tr><td>Conceitos</td><td><a href="fundamentos/#conceito">Definição e componentes do sistema</a></td><td><a href="classificacao/#mapa">Classificação e mapa temático</a></td></tr>
+        <tr><td>Física e dados</td><td><a href="fundamentos/#radiacao">Espectro</a> · <a href="fundamentos/#atmosfera">Atmosfera</a></td><td><a href="classificacao/#atributos">Espaço de atributos</a></td></tr>
+        <tr><td>Alvos</td><td><a href="fundamentos/#alvos">Assinatura espectral</a></td><td><a href="classificacao/#atributos">Separabilidade entre classes</a></td></tr>
+        <tr><td>Métodos</td><td><a href="fundamentos/#sensores">Sensores e resoluções</a></td><td><a href="classificacao/#kmedias">K-médias</a> · <a href="classificacao/#supervisionada">Classificadores supervisionados</a> · <a href="classificacao/#objeto">GEOBIA</a></td></tr>
+        <tr><td>Qualidade</td><td><a href="fundamentos/#sensores">Pixel misto e resolução espacial</a></td><td><a href="classificacao/#acuracia">Matriz de confusão e índices</a></td></tr>
+        <tr><td>Prática no QGIS</td><td><a href="fundamentos/#pratica">Sentinel-2 e NDVI</a></td><td><a href="classificacao/#pratica">Classificação com o dzetsaka</a></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</main>
+
+<footer><div class="wrap">Prof. Hatan Pinheiro · Disciplina de Sensoriamento Remoto. Esquemas e cenas sintéticas com valores ilustrativos, gerados para fins didáticos.</div></footer>
+</body>
+</html>

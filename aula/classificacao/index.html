@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Material interativo da aula Classificação de Imagens de Sensoriamento Remoto: espaço de atributos, K-médias, classificadores supervisionados, pixel e objeto, matriz de confusão e prática no QGIS com o dzetsaka.">
+<title>Classificação de Imagens</title>
+<script>try{if(localStorage.getItem("sr-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../comum.css">
+<style>
+.viz{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;align-items:start}
+.viz.wide{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+.viz>*{min-width:0;display:grid;gap:10px;align-content:start}
+.mapcv{width:100%;max-width:460px;aspect-ratio:1;image-rendering:pixelated;border-radius:6px;border:1px solid var(--line);display:block;cursor:crosshair;touch-action:manipulation}
+.plot{width:100%;height:auto;aspect-ratio:4/3.3;display:block;border-radius:6px;border:1px solid var(--line);background:var(--surface)}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.row label{font-size:.9rem;display:inline-flex;gap:6px;align-items:center}
+select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.primary:hover{background:var(--accent);filter:brightness(1.08)}
+.legend-cls{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.86rem}
+.legend-cls i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.chip.cls{display:inline-flex;align-items:center;gap:6px}
+.chip.cls i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.chip.cls[aria-pressed="true"] i{outline:1.5px solid var(--accent-ink)}
+.sigbars{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;align-items:end;height:110px;padding-top:6px}
+.sigbars div{display:grid;grid-template-rows:1fr auto auto;gap:2px;height:100%;text-align:center}
+.sigbars .bar{align-self:end;background:var(--accent);border-radius:2px 2px 0 0;min-height:1px;transition:height .12s}
+.sigbars small{font-family:var(--font-mono);font-size:.72rem;color:var(--muted)}
+.sigbars b{font-family:var(--font-mono);font-weight:500;font-size:.8rem}
+.algo-info{min-height:6.5em}
+.algo-info .eq{font-family:var(--font-mono);font-size:.9rem;display:block;margin-top:6px;overflow-x:auto;white-space:nowrap}
+.matrix{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
+.matrix th,.matrix td{padding:6px 7px;text-align:right;border:1px solid var(--line);text-transform:none;letter-spacing:0}
+.matrix th{font-family:var(--font-body);font-size:.8rem;color:var(--muted);font-weight:600;background:var(--surface-2)}
+.matrix th.rowh{text-align:left}
+.matrix td.cell{cursor:pointer;font-family:var(--font-mono)}
+.matrix td.cell:hover{outline:2px solid var(--accent);outline-offset:-2px}
+.matrix td.diag{background:var(--ok-soft);color:var(--ok);font-weight:600}
+.matrix td.err{background:var(--no-soft);color:var(--no)}
+.matrix td.sel{outline:2px solid var(--ink);outline-offset:-2px}
+.matrix td.tot{font-family:var(--font-mono);color:var(--muted)}
+.lk{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:4px}
+.lk div{font-size:.82rem;padding:6px 8px;border-radius:6px;background:var(--surface-2);color:var(--muted)}
+.lk div.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.lk div b{display:block;font-family:var(--font-mono);font-weight:500}
+.compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.downloads{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.downloads a{text-decoration:none}
+.busy{opacity:.55;transition:opacity .15s}
+@media (max-width:820px){.viz,.viz.wide,.compare{grid-template-columns:minmax(0,1fr)}}
+</style>
+<script src="../comum.js" defer></script>
+<script src="classificacao.js" defer></script>
+</head>
+<body>
+<div class="topbar"><div class="wrap">
+  <a class="brand" href="../">Sensoriamento Remoto<small>Prof. Hatan Pinheiro</small></a>
+  <nav class="days" aria-label="Dias de aula">
+    <a href="../fundamentos/"><b>Dia 1</b>Fundamentos</a>
+    <a href="../classificacao/" aria-current="page"><b>Dia 2</b>Classificação</a>
+  </nav>
+  <button class="theme-btn" type="button" data-theme-toggle aria-pressed="false">Modo escuro</button>
+</div></div>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Disciplina de Sensoriamento Remoto · Graduação · Prof. Hatan Pinheiro</p>
+      <h1 style="margin-top:10px">Classificação de Imagens</h1>
+      <p class="lead">Do pixel ao mapa temático: métodos, algoritmos e avaliação da acurácia.</p>
+      <p class="meta">Dia 2 de 2. Os experimentos usam uma cena sintética de 200 × 200 pixels de 10 m (2 km × 2 km), com cinco bandas no padrão do Sentinel-2 e reflectâncias ilustrativas. Por ser sintética, a cena tem referência conhecida em todos os pixels, o que permite medir a acurácia de cada escolha.</p>
+      <div class="downloads">
+        <a class="btn primary" href="slides/Aula2_Classificacao.pdf">Slides em PDF</a>
+        <a class="btn" href="slides/Aula2_Classificacao.pptx">Slides em PPTX</a>
+      </div>
+    </div>
+    <nav aria-label="Roteiro da aula">
+      <p class="eyebrow" style="margin-bottom:6px">Roteiro da aula</p>
+      <ol class="roteiro">
+        <li><a href="#mapa"><span class="n">1</span><span>Da imagem ao mapa temático</span><span class="sl">s. 3–5</span></a></li>
+        <li><a href="#atributos"><span class="n">2</span><span>Espaço de atributos e separabilidade</span><span class="sl">s. 6–7</span></a></li>
+        <li><a href="#kmedias"><span class="n">3</span><span>Não supervisionada: K-médias</span><span class="sl">s. 8–9</span></a></li>
+        <li><a href="#supervisionada"><span class="n">4</span><span>Supervisionada: amostras e algoritmos</span><span class="sl">s. 10–14</span></a></li>
+        <li><a href="#objeto"><span class="n">5</span><span>Pixel e objeto (GEOBIA)</span><span class="sl">s. 15</span></a></li>
+        <li><a href="#acuracia"><span class="n">6</span><span>Avaliação da acurácia</span><span class="sl">s. 16–17</span></a></li>
+        <li><a href="#pratica"><span class="n">7</span><span>Atividade prática no QGIS com o dzetsaka</span><span class="sl">s. 20–22</span></a></li>
+      </ol>
+    </nav>
+  </div>
+</header>
+
+<nav class="nav" aria-label="Etapas">
+  <div class="wrap nav-inner" id="navlinks">
+    <a href="#mapa"><b>1</b>Mapa temático</a>
+    <a href="#atributos"><b>2</b>Atributos</a>
+    <a href="#kmedias"><b>3</b>K-médias</a>
+    <a href="#supervisionada"><b>4</b>Supervisionada</a>
+    <a href="#objeto"><b>5</b>Pixel e objeto</a>
+    <a href="#acuracia"><b>6</b>Acurácia</a>
+    <a href="#pratica"><b>7</b>Prática</a>
+    <a href="#sintese">Síntese e discussão</a>
+    <a href="#referencias">Referências</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ============ 1. MAPA ============ -->
+<section class="step" id="mapa">
+  <div class="step-head"><span class="step-n">1</span><div><p class="eyebrow">Slides 3, 4 e 5</p><h2>Da imagem ao mapa temático</h2></div></div>
+  <dl class="keys">
+    <div><dt>Definição</dt><dd>Atribuir cada pixel (ou objeto) a uma classe temática.</dd></div>
+    <div><dt>Entrada</dt><dd>Reflectância em várias bandas e, eventualmente, índices e textura.</dd></div>
+    <div><dt>Saída</dt><dd>Mapa temático de cobertura e uso da terra.</dd></div>
+    <div><dt>Fundamento</dt><dd>Alvos distintos ocupam regiões distintas do espaço de atributos.</dd></div>
+  </dl>
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>Explore a cena</h3><span class="eyebrow">Passe o cursor ou toque em um pixel</span></div>
+      <div class="viz">
+        <div>
+          <canvas id="cv-scene" class="mapcv" width="600" height="600" aria-label="Cena sintética"></canvas>
+          <div class="seg" role="group" aria-label="Visualização" id="seg-comp">
+            <button data-v="fc" aria-pressed="true">Falsa-cor (B08, B04, B03)</button>
+            <button data-v="nat" aria-pressed="false">Cor natural (B04, B03, B02)</button>
+            <button data-v="ref" aria-pressed="false">Referência (verdade)</button>
+          </div>
+        </div>
+        <div>
+          <p class="small muted">Valores do pixel selecionado em cada banda: a “assinatura” que o classificador recebe como entrada.</p>
+          <div class="sigbars" id="sigbars" aria-live="polite"></div>
+          <div class="readout">
+            <div><span>Pixel (linha, coluna)</span><strong id="o-pxy">–</strong></div>
+            <div><span>Classe de referência</span><strong id="o-pref" style="font-family:var(--font-body);font-weight:700">–</strong></div>
+          </div>
+          <p class="small" id="o-pmix"></p>
+          <div class="legend-cls" id="legend1"></div>
+          <p class="note">Na composição falsa-cor, a vegetação aparece em vermelho porque o IV próximo (B08) é exibido no canal vermelho. Pixels na borda entre dois alvos misturam as duas respostas (pixel misto).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. ESPAÇO DE ATRIBUTOS ============ -->
+<section class="step" id="atributos">
+  <div class="step-head"><span class="step-n">2</span><div><p class="eyebrow">Slides 6 e 7</p><h2>Espaço de atributos e separabilidade</h2></div></div>
+  <div class="prose"><p>Cada pixel é um ponto em um espaço cujos eixos são as bandas. Pixels de uma mesma classe formam nuvens; a classificação só é possível onde essas nuvens se separam. A separabilidade depende das bandas escolhidas.</p></div>
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>Gráfico de dispersão entre bandas</h3><span class="eyebrow">3.000 pixels sorteados da cena</span></div>
+      <div class="row">
+        <label for="ax-x">Eixo X <select id="ax-x"></select></label>
+        <label for="ax-y">Eixo Y <select id="ax-y"></select></label>
+        <button class="btn" id="btn-pair1">B04 × B08</button>
+        <button class="btn" id="btn-pair2">B04 × B11</button>
+      </div>
+      <div class="chips" role="group" aria-label="Classes exibidas" id="cls-toggle"></div>
+      <canvas id="sc-space" class="plot" style="max-width:760px" aria-label="Gráfico de dispersão das classes"></canvas>
+      <p class="callout small" id="o-sep"></p>
+      <p class="note">O círculo preto indica o último pixel examinado na etapa 1. Valores ilustrativos, gerados para fins didáticos.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. K-MÉDIAS ============ -->
+<section class="step" id="kmedias">
+  <div class="step-head"><span class="step-n">3</span><div><p class="eyebrow">Slides 8 e 9</p><h2>Classificação não supervisionada: K-médias</h2></div></div>
+  <div class="prose"><p>Sem amostras prévias, o algoritmo agrupa os pixels por semelhança espectral. O K-médias repete dois passos até que os centros parem de se mover: (1) cada pixel é atribuído ao centro mais próximo; (2) cada centro é recalculado como a média dos pixels atribuídos a ele. Os grupos resultantes não têm nome: o analista os interpreta depois.</p></div>
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>K-médias passo a passo</h3><span class="eyebrow">Usa as bandas B04 e B08</span></div>
+      <div class="row">
+        <div class="ctrl" style="min-width:200px;flex:1"><label for="sl-k">Número de grupos (k) <output id="o-k">5</output></label><input type="range" id="sl-k" min="2" max="8" value="5"></div>
+        <button class="btn" id="km-reset">Sortear novos centros</button>
+        <button class="btn primary" id="km-step">Próxima iteração</button>
+        <button class="btn" id="km-run">Executar até convergir</button>
+      </div>
+      <div class="viz">
+        <div><canvas id="sc-km" class="plot" aria-label="Agrupamentos no espaço de atributos"></canvas></div>
+        <div><canvas id="cv-km" class="mapcv" width="600" height="600" aria-label="Mapa de agrupamentos"></canvas></div>
+      </div>
+      <div class="readout">
+        <div><span>Iteração</span><strong id="o-kit">0</strong></div>
+        <div><span>Pixels que mudaram de grupo</span><strong id="o-kchg">–</strong></div>
+        <div><span>Soma dos quadrados intragrupo</span><strong id="o-ksse">–</strong></div>
+      </div>
+      <div class="table-scroll"><table><thead><tr><th>Grupo</th><th>Pixels</th><th>Classe de referência predominante</th><th>Pureza</th></tr></thead><tbody id="km-table"></tbody></table></div>
+      <p class="note">Os centros iniciais são sorteados; execuções diferentes podem convergir para agrupamentos diferentes. Experimente k = 3 e k = 8 e observe como as classes se fundem ou se dividem.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. SUPERVISIONADA ============ -->
+<section class="step" id="supervisionada">
+  <div class="step-head"><span class="step-n">4</span><div><p class="eyebrow">Slides 10 a 14</p><h2>Classificação supervisionada: amostras e algoritmos</h2></div></div>
+  <dl class="keys">
+    <div><dt>Representatividade</dt><dd>Cobrir a variação interna de cada classe.</dd></div>
+    <div><dt>Quantidade</dt><dd>Pixels suficientes para estimar médias e covariâncias.</dd></div>
+    <div><dt>Distribuição e pureza</dt><dd>Amostras espalhadas pela cena, longe de bordas e pixels mistos.</dd></div>
+    <div><dt>Independência</dt><dd>Amostras de treinamento separadas das de validação.</dd></div>
+  </dl>
+
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>Laboratório de classificação</h3><span class="eyebrow">Amostras → algoritmo → mapa</span></div>
+
+      <p class="small"><strong>1. Amostras de treinamento.</strong> Sorteie amostras automaticamente ou escolha uma classe e clique no mapa para coletar pixels manualmente.</p>
+      <div class="row">
+        <div class="ctrl" style="min-width:200px;flex:1"><label for="sl-ns">Amostras por classe (sorteio) <output id="o-ns">30</output></label><input type="range" id="sl-ns" min="3" max="120" value="30"></div>
+        <button class="btn" id="tr-auto">Sortear amostras</button>
+        <button class="btn" id="tr-clear">Limpar amostras</button>
+      </div>
+      <div class="chips" role="group" aria-label="Classe para coleta manual" id="tr-cls"></div>
+      <p class="small muted" id="o-trcount"></p>
+
+      <p class="small" style="margin-top:6px"><strong>2. Algoritmo e bandas.</strong></p>
+      <div class="seg" role="group" aria-label="Algoritmo" id="seg-alg">
+        <button data-v="md" aria-pressed="false">Distância mínima</button>
+        <button data-v="pp" aria-pressed="false">Paralelepípedo</button>
+        <button data-v="ml" aria-pressed="true">Máxima verossimilhança</button>
+        <button data-v="knn" aria-pressed="false">k-NN</button>
+        <button data-v="rf" aria-pressed="false">Random Forest</button>
+      </div>
+      <div class="row">
+        <div class="seg" role="group" aria-label="Bandas usadas" id="seg-feat">
+          <button data-v="2" aria-pressed="true">2 bandas do gráfico</button>
+          <button data-v="5" aria-pressed="false">5 bandas</button>
+        </div>
+        <label for="sup-x">X <select id="sup-x"></select></label>
+        <label for="sup-y">Y <select id="sup-y"></select></label>
+      </div>
+      <div class="row" id="param-row">
+        <div class="ctrl" id="p-pp" style="min-width:220px;flex:1"><label for="sl-ppk">Limite do paralelepípedo (k × desvio-padrão) <output id="o-ppk">2,0</output></label><input type="range" id="sl-ppk" min="0.5" max="4" step="0.1" value="2"></div>
+        <div class="ctrl" id="p-knn" style="min-width:220px;flex:1"><label for="sl-knn">Vizinhos (k) <output id="o-knn">5</output></label><input type="range" id="sl-knn" min="1" max="25" step="2" value="5"></div>
+        <div class="ctrl" id="p-rf" style="min-width:220px;flex:1"><label for="sl-rf">Número de árvores <output id="o-rf">25</output></label><input type="range" id="sl-rf" min="1" max="60" value="25"></div>
+      </div>
+      <div class="callout algo-info small" id="algo-info"></div>
+
+      <p class="small" style="margin-top:6px"><strong>3. Resultado.</strong> À esquerda, as regiões de decisão no espaço de atributos (quando a classificação usa as 2 bandas do gráfico); à direita, o mapa classificado.</p>
+      <div class="viz">
+        <div><canvas id="sc-sup" class="plot" aria-label="Regiões de decisão e amostras de treinamento"></canvas></div>
+        <div>
+          <canvas id="cv-sup" class="mapcv" width="600" height="600" aria-label="Mapa classificado; clique para adicionar amostra"></canvas>
+          <div class="seg" role="group" aria-label="Exibição do mapa" id="seg-supview">
+            <button data-v="cls" aria-pressed="true">Mapa classificado</button>
+            <button data-v="err" aria-pressed="false">Acertos e erros</button>
+            <button data-v="img" aria-pressed="false">Imagem</button>
+          </div>
+        </div>
+      </div>
+      <div class="readout">
+        <div><span>Exatidão global</span><strong id="o-oa">–</strong></div>
+        <div><span>Kappa</span><strong id="o-kappa">–</strong></div>
+        <div><span>Não classificados</span><strong id="o-unc">–</strong></div>
+        <div><span>Tempo de processamento</span><strong id="o-time">–</strong></div>
+      </div>
+      <div class="legend-cls" id="legend2"></div>
+      <p class="note">A exatidão é calculada sobre todos os 40.000 pixels da cena, possível apenas porque a referência sintética é conhecida. Em dados reais, usa-se uma amostra de validação independente. A matriz completa está na etapa 6.</p>
+    </div>
+  </div>
+
+  <div class="block">
+    <h3>Experimentos sugeridos</h3>
+    <ol class="prose small" style="padding-left:1.2em;margin:0">
+      <li>Com B04 × B08, compare distância mínima e máxima verossimilhança: onde as fronteiras diferem e por quê?</li>
+      <li>Mantenha o algoritmo e passe de 2 para 5 bandas: qual classe mais se beneficia?</li>
+      <li>Reduza as amostras para 3 por classe e aplique a máxima verossimilhança: o que acontece com a estimativa da covariância?</li>
+      <li>No paralelepípedo, reduza k para 1,0: quantos pixels ficam sem classe?</li>
+      <li>No k-NN, compare k = 1 e k = 25 com poucas amostras.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ 5. OBJETO ============ -->
+<section class="step" id="objeto">
+  <div class="step-head"><span class="step-n">5</span><div><p class="eyebrow">Slide 15</p><h2>Pixel e objeto (GEOBIA)</h2></div></div>
+  <div class="prose"><p>Na classificação por pixel, cada pixel é decidido isoladamente, e o ruído produz o efeito “sal e pimenta”. Na análise baseada em objetos, a imagem é primeiro segmentada em regiões contíguas e espectralmente homogêneas; a classificação é então aplicada a cada objeto (BLASCHKE, 2010).</p></div>
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>Segmentação por crescimento de regiões</h3><span class="eyebrow">Usa o classificador configurado na etapa 4</span></div>
+      <div class="row">
+        <div class="ctrl" style="min-width:220px;flex:1"><label for="sl-seg">Limiar de similaridade espectral <output id="o-seg">9</output></label><input type="range" id="sl-seg" min="2" max="20" step="0.5" value="9"></div>
+        <div class="seg" role="group" aria-label="Exibição" id="seg-objview">
+          <button data-v="seg" aria-pressed="true">Segmentos</button>
+          <button data-v="obj" aria-pressed="false">Classificação por objeto</button>
+          <button data-v="pix" aria-pressed="false">Classificação por pixel</button>
+        </div>
+      </div>
+      <div class="viz">
+        <div><canvas id="cv-obj" class="mapcv" width="600" height="600" aria-label="Segmentação e classificação por objeto"></canvas></div>
+        <div>
+          <div class="compare">
+            <div class="readout"><div><span>Por pixel</span><strong id="o-oapix">–</strong></div></div>
+            <div class="readout"><div><span>Por objeto</span><strong id="o-oaobj">–</strong></div></div>
+          </div>
+          <div class="readout"><div><span>Número de objetos</span><strong id="o-nseg">–</strong></div></div>
+          <p class="small muted">Limiar baixo gera muitos objetos pequenos (resultado próximo ao da classificação por pixel). Limiar alto funde alvos distintos em um mesmo objeto (subsegmentação), e o erro passa a ocorrer em blocos.</p>
+          <p class="note">Algoritmo didático: um pixel é incorporado ao objeto vizinho quando sua distância espectral (5 bandas) à média do objeto é menor que o limiar. Programas de GEOBIA usam critérios mais elaborados, como forma, escala e textura.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6. ACURÁCIA ============ -->
+<section class="step" id="acuracia">
+  <div class="step-head"><span class="step-n">6</span><div><p class="eyebrow">Slides 16 e 17</p><h2>Avaliação da acurácia</h2></div></div>
+  <div class="prose"><p>A matriz de confusão cruza, para cada pixel avaliado, a classe atribuída pelo classificador (linhas) com a classe de referência (colunas); é a base da avaliação da acurácia de classificações (CONGALTON, 1991). A diagonal reúne os acertos; os demais valores, as confusões entre classes.</p></div>
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>Matriz de confusão do resultado atual</h3><span class="eyebrow" id="acc-src">Classificação da etapa 4</span></div>
+      <div class="seg" role="group" aria-label="Resultado avaliado" id="seg-accsrc">
+        <button data-v="pix" aria-pressed="true">Por pixel (etapa 4)</button>
+        <button data-v="obj" aria-pressed="false">Por objeto (etapa 5)</button>
+      </div>
+      <p class="small muted">Clique em uma célula para localizar esses pixels no mapa.</p>
+      <div class="viz wide">
+        <div class="table-scroll"><table class="matrix" id="matrix"></table></div>
+        <div>
+          <canvas id="cv-acc" class="mapcv" width="600" height="600" aria-label="Pixels da célula selecionada"></canvas>
+          <p class="small" id="o-cell"></p>
+        </div>
+      </div>
+      <div class="readout">
+        <div><span>Exatidão global</span><strong id="a-oa">–</strong></div>
+        <div><span>Kappa</span><strong id="a-k">–</strong></div>
+        <div><span>Discordância de quantidade</span><strong id="a-q">–</strong></div>
+        <div><span>Discordância de alocação</span><strong id="a-a">–</strong></div>
+      </div>
+      <div class="cols">
+        <div class="small" style="display:grid;gap:6px">
+          <p><strong>Exatidão global</strong> = soma da diagonal ÷ total.</p>
+          <p><strong>Exatidão do produtor</strong> = acertos da classe ÷ total da coluna (referência). Seu complemento é o erro de omissão: pixels da classe que o mapa deixou de incluir.</p>
+          <p><strong>Exatidão do usuário</strong> = acertos da classe ÷ total da linha (classificado). Seu complemento é o erro de comissão: pixels incluídos na classe indevidamente.</p>
+        </div>
+        <div class="small" style="display:grid;gap:6px">
+          <p><strong>Kappa</strong> = (p<sub>o</sub> − p<sub>e</sub>) ÷ (1 − p<sub>e</sub>), em que p<sub>o</sub> é a concordância observada e p<sub>e</sub> a esperada ao acaso (COHEN, 1960).</p>
+          <p><strong>Discordâncias de quantidade e de alocação</strong> decompõem o erro total (1 − exatidão global) em diferença nas proporções das classes e em erro de posição; foram propostas como alternativa ao kappa (PONTIUS JR.; MILLONES, 2011).</p>
+        </div>
+      </div>
+      <p class="small"><strong>Faixas de interpretação do kappa</strong> (LANDIS; KOCH, 1977). As faixas são convencionais e não constituem critério estatístico de aprovação.</p>
+      <div class="lk" id="lk"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 7. PRÁTICA ============ -->
+<section class="step" id="pratica">
+  <div class="step-head"><span class="step-n">7</span><div><p class="eyebrow">Slides 20, 21 e 22</p><h2>Atividade prática no QGIS com o dzetsaka</h2></div></div>
+  <div class="prose"><p>A atividade reutiliza a cena Sentinel-2 L2A baixada no Dia 1. O dzetsaka é um complemento de classificação para o QGIS (KARASIAK, 2016) que recebe um raster e uma camada vetorial de amostras com campo numérico de classe. O algoritmo GMM (modelo gaussiano por classe, princípio próximo ao da máxima verossimilhança) funciona sem dependências; Random Forest, SVM e KNN exigem a biblioteca scikit-learn.</p></div>
+  <div class="block">
+    <div class="cols-3" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+      <div class="panel">
+        <div class="panel-title"><h3>1. Preparar imagem e amostras</h3><span class="eyebrow">Slide 20</span></div>
+        <div class="progress" aria-hidden="true"><span id="pg-a"></span></div>
+        <ol class="check" id="ck-a">
+          <li><input type="checkbox" id="a-1"><span class="n">1</span><label for="a-1">Reabrir a cena Sentinel-2 L2A do Dia 1 (pasta R10m).</label></li>
+          <li><input type="checkbox" id="a-2"><span class="n">2</span><label for="a-2">Criar raster multibanda com B02, B03, B04 e B08 (Raster › Miscelânea › Construir Raster Virtual, bandas separadas).</label></li>
+          <li><input type="checkbox" id="a-3"><span class="n">3</span><label for="a-3">Exibir composição falsa-cor: R = B08, G = B04, B = B03.</label></li>
+          <li><input type="checkbox" id="a-4"><span class="n">4</span><label for="a-4">Criar camada vetorial de polígonos com campo inteiro “classe”.</label></li>
+          <li><input type="checkbox" id="a-5"><span class="n">5</span><label for="a-5">Digitalizar amostras das cinco classes, distribuídas pela cena.</label></li>
+        </ol>
+        <div class="table-scroll"><table><thead><tr><th>Código</th><th>Classe</th></tr></thead><tbody id="codes"></tbody></table></div>
+        <p class="note">O dzetsaka não aceita rótulos de texto no campo de classe.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><h3>2. Classificar com o dzetsaka</h3><span class="eyebrow">Slide 21</span></div>
+        <div class="progress" aria-hidden="true"><span id="pg-b"></span></div>
+        <ol class="check" id="ck-b">
+          <li><input type="checkbox" id="b-1"><span class="n">1</span><label for="b-1">Instalar o complemento dzetsaka (Complementos › Gerenciar e Instalar Complementos).</label></li>
+          <li><input type="checkbox" id="b-2"><span class="n">2</span><label for="b-2">Indicar o raster multibanda, a camada de amostras e o campo numérico de classe.</label></li>
+          <li><input type="checkbox" id="b-3"><span class="n">3</span><label for="b-3">Escolher o algoritmo: GMM (sem dependências) ou RF, SVM e KNN (exigem scikit-learn).</label></li>
+          <li><input type="checkbox" id="b-4"><span class="n">4</span><label for="b-4">Definir as saídas: mapa classificado, mapa de confiança e matriz de confusão, com percentual de amostras reservado para validação.</label></li>
+          <li><input type="checkbox" id="b-5"><span class="n">5</span><label for="b-5">Executar e comparar o mapa com a composição falsa-cor.</label></li>
+        </ol>
+        <p class="warnbox small">Nomes de menus e opções variam entre versões do dzetsaka: conferir na versão instalada. Quando falta uma dependência, versões recentes oferecem instalá-la automaticamente.</p>
+      </div>
+      <div class="panel">
+        <div class="panel-title"><h3>3. Avaliar e pós-processar</h3><span class="eyebrow">Slide 22</span></div>
+        <div class="progress" aria-hidden="true"><span id="pg-c"></span></div>
+        <ol class="check" id="ck-c">
+          <li><input type="checkbox" id="c-1"><span class="n">1</span><label for="c-1">Analisar a matriz de confusão: exatidão global, do produtor, do usuário e kappa.</label></li>
+          <li><input type="checkbox" id="c-2"><span class="n">2</span><label for="c-2">Repetir a classificação com outro algoritmo (ex.: GMM e RF) e comparar.</label></li>
+          <li><input type="checkbox" id="c-3"><span class="n">3</span><label for="c-3">Inspecionar o mapa de confiança: onde o classificador hesita?</label></li>
+          <li><input type="checkbox" id="c-4"><span class="n">4</span><label for="c-4">Eliminar pixels isolados (Raster › Análise › Peneira).</label></li>
+          <li><input type="checkbox" id="c-5"><span class="n">5</span><label for="c-5">Calcular a área de cada classe e exportar o mapa em layout.</label></li>
+        </ol>
+        <p class="warnbox small"><strong>Verificar antes:</strong> as amostras de validação devem ser independentes das de treinamento.</p>
+      </div>
+    </div>
+    <p class="note">O progresso das listas fica salvo apenas neste navegador.</p>
+  </div>
+</section>
+
+<!-- ============ SÍNTESE ============ -->
+<section class="step" id="sintese">
+  <div class="step-head"><span class="step-n" style="font-size:2.2rem">Σ</span><div><p class="eyebrow">Slides 18, 19 e 23</p><h2>Síntese e discussão</h2></div></div>
+  <div class="flow">
+    <div><b>Separabilidade</b><span class="muted small">A classificação converte reflectâncias em classes a partir da separação das nuvens no espaço de atributos.</span></div>
+    <div><b>Duas abordagens</b><span class="muted small">A não supervisionada agrupa; a supervisionada aprende com amostras.</span></div>
+    <div><b>Amostras e algoritmo</b><span class="muted small">Condicionam o resultado tanto quanto a imagem.</span></div>
+    <div><b>Acurácia</b><span class="muted small">Sem avaliação, a confiabilidade do mapa é desconhecida.</span></div>
+  </div>
+  <div class="block">
+    <h3>Questões para discussão</h3>
+    <p class="muted small">Cada questão indica as etapas da página que reúnem os elementos para a resposta. As anotações ficam salvas apenas neste navegador.</p>
+    <div class="qs" id="qs"></div>
+  </div>
+</section>
+
+<!-- ============ REFERÊNCIAS ============ -->
+<section class="step" id="referencias">
+  <div class="step-head"><span class="step-n" style="font-size:2.2rem">§</span><div><p class="eyebrow">Slide 24 · ABNT NBR 6023</p><h2>Referências</h2></div></div>
+  <div class="refs">
+    <p>BLASCHKE, T. Object based image analysis for remote sensing. <strong>ISPRS Journal of Photogrammetry and Remote Sensing</strong>, v. 65, n. 1, p. 2-16, 2010. DOI: 10.1016/j.isprsjprs.2009.06.004.</p>
+    <p>BREIMAN, L. Random forests. <strong>Machine Learning</strong>, v. 45, n. 1, p. 5-32, 2001. DOI: 10.1023/A:1010933404324.</p>
+    <p>COHEN, J. A coefficient of agreement for nominal scales. <strong>Educational and Psychological Measurement</strong>, v. 20, n. 1, p. 37-46, 1960. DOI: 10.1177/001316446002000104.</p>
+    <p>CONGALTON, R. G. A review of assessing the accuracy of classifications of remotely sensed data. <strong>Remote Sensing of Environment</strong>, v. 37, n. 1, p. 35-46, 1991. DOI: 10.1016/0034-4257(91)90048-B.</p>
+    <p>KARASIAK, N. <strong>Dzetsaka Qgis Classification plugin</strong>. [<em>S. l.</em>]: Zenodo, 2016. DOI: 10.5281/zenodo.2552284. Disponível em: https://github.com/nkarasiak/dzetsaka. Acesso em: 13 nov. 2026.</p>
+    <p>LANDIS, J. R.; KOCH, G. G. The measurement of observer agreement for categorical data. <strong>Biometrics</strong>, v. 33, n. 1, p. 159-174, 1977. DOI: 10.2307/2529310.</p>
+    <p>MOREIRA, M. A. <strong>Fundamentos do sensoriamento remoto e metodologias de aplicação</strong>. 4. ed. Viçosa: Ed. UFV, 2011.</p>
+    <p>PONTIUS JR., R. G.; MILLONES, M. Death to Kappa: birth of quantity disagreement and allocation disagreement for accuracy assessment. <strong>International Journal of Remote Sensing</strong>, v. 32, n. 15, p. 4407-4429, 2011. DOI: 10.1080/01431161.2011.552923.</p>
+    <p>ZANOTTA, D. C.; FERREIRA, M. P.; ZORTEA, M. <strong>Processamento de imagens de satélite</strong>. São Paulo: Oficina de Textos, 2019.</p>
+  </div>
+  <p class="note" style="margin-top:14px">MOREIRA (2011) e ZANOTTA, FERREIRA e ZORTEA (2019) constam como leituras de apoio em língua portuguesa. Dados bibliográficos conferidos em catálogos e nos registros dos periódicos; recomenda-se a conferência final na fonte original.</p>
+</section>
+</main>
+
+<footer><div class="wrap">Material interativo da aula “Classificação de Imagens de Sensoriamento Remoto”, Prof. Hatan Pinheiro. Cena sintética e reflectâncias ilustrativas, geradas para fins didáticos.</div></footer>
+</body>
+</html>
