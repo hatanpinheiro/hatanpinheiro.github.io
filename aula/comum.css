@@ -253,3 +253,5 @@ html.slides-on .plot{max-height:62vh}
 html.slides-on .mapcv,html.slides-on .scene canvas{max-width:min(460px,62vh)}
 html.slides-on .qs{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
 html.slides-on .q textarea{min-height:48px}
+.refs{grid-template-columns:minmax(0,1fr)}
+.refs p{overflow-wrap:anywhere}
