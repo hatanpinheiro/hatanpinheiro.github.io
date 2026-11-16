@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Aula de pós-graduação sobre classificação digital de imagens de sensoriamento remoto: espaço de atributos, pixel e objeto, K-Means e ISODATA, MaxVer, CART, Random Forest, SVM, deep learning, avaliação da acurácia e demonstração prática com Sentinel-2.">
+<title>Classificação Digital de Imagens</title>
+<script>try{if(localStorage.getItem("sr-theme")==="dark")document.documentElement.setAttribute("data-theme","dark");}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="../vendor/katex/katex.min.css">
+<link rel="stylesheet" href="../comum.css">
+<style>
+.prose h4{font-family:var(--font-display);font-stretch:85%;font-size:1.12rem;margin:10px 0 0}
+.prose ul,.prose ol{margin:0;padding-left:1.3em;display:grid;gap:6px}
+.formula-box{background:var(--surface-2);border-radius:8px;padding:6px 14px;overflow-x:auto;max-width:100%}
+.katex-display{margin:.6em 0;overflow-x:auto;overflow-y:hidden;padding:2px 0}
+.code{position:relative;background:#0f1724;color:#dbe6f5;border-radius:8px;font-family:var(--font-mono);font-size:.8rem;line-height:1.55;max-width:100%}
+.code pre{margin:0;padding:14px 16px;overflow-x:auto;white-space:pre}
+.code .lang{position:absolute;top:6px;right:84px;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:#8ea3bf}
+.code button{position:absolute;top:5px;right:6px;font:inherit;font-size:.75rem;border:1px solid #33465f;background:#172235;color:#dbe6f5;border-radius:5px;padding:3px 9px;cursor:pointer}
+.code button:hover{background:#22324b}
+.doc-table{width:100%;border-collapse:collapse;font-size:.92rem}
+.doc-table th,.doc-table td{border-bottom:1px solid var(--line);padding:7px 9px;vertical-align:top;text-align:left}
+.doc-table th{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.doc-table td:first-child{font-weight:600}
+.cmx{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem;width:100%}
+.cmx th,.cmx td{border:1px solid var(--line);padding:6px 8px;text-align:right}
+.cmx th{background:var(--surface-2);font-size:.8rem;color:var(--muted);font-weight:600}
+.cmx th.rh{text-align:left}
+.cmx td{font-family:var(--font-mono)}
+.cmx td.d{background:var(--ok-soft);color:var(--ok);font-weight:600}
+.cmx td.e{background:var(--no-soft);color:var(--no)}
+.cmx td.t{color:var(--muted)}
+.qa{display:flex;height:22px;border-radius:4px;overflow:hidden;background:var(--surface-2)}
+.qa span{display:block;height:100%}
+.qa-leg{display:flex;gap:16px;font-size:.85rem;flex-wrap:wrap}
+.qa-leg i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.flow-svg{width:100%;height:auto;display:block}
+.flow-svg text{font-family:var(--font-body)}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.downloads{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.downloads a{text-decoration:none}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.pend{background:var(--mid-soft);color:var(--mid);border-radius:3px;padding:0 4px;font-family:var(--font-mono);font-size:.84em}
+</style>
+<script src="../vendor/katex/katex.min.js" defer></script>
+<script src="../vendor/katex/contrib/auto-render.min.js" defer></script>
+<script src="../comum.js" defer></script>
+<script src="classificacao-digital.js" defer></script>
+</head>
+<body>
+<div class="topbar"><div class="wrap">
+  <a class="brand" href="../">Sensoriamento Remoto<small>Prof. Hatan Pinheiro</small></a>
+  <nav class="days" aria-label="Dias de aula">
+    <a href="../fundamentos/"><b>Dia 1</b>Fundamentos</a>
+    <a href="../classificacao/"><b>Dia 2</b>Classificação</a>
+    <a href="../mapa-tematico/"><b>Dia 3</b>Mapa temático</a>
+    <a href="../classificacao-digital/" aria-current="page"><b>Dia 4</b>Classificação avançada</a>
+  </nav>
+  <button class="theme-btn" type="button" data-theme-toggle aria-pressed="false">Modo escuro</button>
+</div></div>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Graduação avançada e pós-graduação · Prof. Hatan Pinheiro</p>
+      <h1 style="margin-top:10px">Classificação Digital de Imagens</h1>
+      <p class="lead">Espaço de atributos, unidade de análise, algoritmos, pós-classificação e avaliação da acurácia, com demonstração prática em Sentinel-2.</p>
+      <p class="meta">Dia 4. Carga horária sugerida de 4 h: 2 h 30 min de exposição teórico-conceitual e 1 h 30 min de demonstração prática no Google Earth Engine e no QGIS. Pré-requisitos: fundamentos de sensoriamento remoto, álgebra matricial e estatística multivariada. Citações no sistema autor-data (ABNT NBR 10520); referências segundo a ABNT NBR 6023; coordenadas no formato latitude, longitude.</p>
+      <div class="downloads">
+        <a class="btn primary" href="#pratica">Ir para a demonstração prática</a>
+        <a class="btn" href="../classificacao/#supervisionada">Animações dos métodos (Dia 2)</a>
+      </div>
+    </div>
+    <nav aria-label="Roteiro da aula">
+      <p class="eyebrow" style="margin-bottom:6px">Roteiro da aula</p>
+      <ol class="roteiro">
+        <li><a href="#espaco"><span class="n">1</span><span>Espaço de atributos</span><span class="sl">1.1</span></a></li>
+        <li><a href="#unidade"><span class="n">2</span><span>Unidade de análise: pixel ou objeto</span><span class="sl">1.2</span></a></li>
+        <li><a href="#naosup"><span class="n">3</span><span>Não supervisionados: K-Means e ISODATA</span><span class="sl">1.3</span></a></li>
+        <li><a href="#sup"><span class="n">4</span><span>Supervisionados: MaxVer, CART, RF, SVM, CNN</span><span class="sl">1.4</span></a></li>
+        <li><a href="#acuracia"><span class="n">5</span><span>Pós-classificação e acurácia</span><span class="sl">1.5</span></a></li>
+        <li><a href="#pratica"><span class="n">6</span><span>Demonstração prática</span><span class="sl">2.1–2.4</span></a></li>
+        <li><a href="#slides"><span class="n">7</span><span>Elementos visuais por slide</span><span class="sl">24 slides</span></a></li>
+      </ol>
+    </nav>
+  </div>
+</header>
+
+<nav class="nav" aria-label="Etapas">
+  <div class="wrap nav-inner" id="navlinks">
+    <a href="#espaco"><b>1</b>Espaço de atributos</a>
+    <a href="#unidade"><b>2</b>Pixel e objeto</a>
+    <a href="#naosup"><b>3</b>Não supervisionados</a>
+    <a href="#sup"><b>4</b>Supervisionados</a>
+    <a href="#acuracia"><b>5</b>Acurácia</a>
+    <a href="#pratica"><b>6</b>Prática</a>
+    <a href="#slides"><b>7</b>Slides</a>
+    <a href="#referencias">Referências</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- ================= 1.1 ================= -->
+<section class="step" id="espaco">
+  <div class="step-head"><span class="step-n">1</span><div><p class="eyebrow">Parte 1 · 1.1</p><h2>O espaço de atributos</h2></div></div>
+  <div class="prose">
+    <p>A classificação digital associa cada pixel, ou cada objeto, a uma classe temática com base em seus atributos (NOVO, 2010; MENESES; ALMEIDA, 2012). Toda classificação digital opera sobre a representação do pixel como vetor de medidas: em uma imagem com n bandas, cada pixel corresponde a um ponto em um espaço euclidiano n-dimensional, denominado espaço de atributos (RICHARDS, 2022; JENSEN, 2016).</p>
+  </div>
+  <div class="block">
+    <h3>Vetor espectral e agrupamentos</h3>
+    <div class="prose">
+      <p><strong>Vetor espectral.</strong> O pixel de posição (i, j) é descrito pelo vetor de reflectâncias nas n bandas. No Sentinel-2 MSI, adotam-se usualmente as dez bandas de 10 m e 20 m da faixa do visível ao infravermelho de ondas curtas, excluindo-se as bandas atmosféricas de 60 m (DRUSCH et al., 2012).</p>
+      <div class="formula-box">$$\mathbf{x}_{ij} = [x_1, x_2, \ldots, x_n]^{T} \in \mathbb{R}^{n}$$</div>
+      <p><strong>Agrupamentos.</strong> Pixels de uma mesma cobertura tendem a formar nuvens compactas, porque compartilham propriedades físico-químicas que determinam a resposta espectral. A dispersão de cada nuvem resulta da variabilidade intraclasse: iluminação e geometria de visada, umidade, fenologia, mistura subpixel e ruído do sensor (LILLESAND; KIEFER; CHIPMAN, 2015). A classificação consiste em particionar esse espaço por meio de fronteiras de decisão e atribuir cada partição a uma classe (RICHARDS, 2022).</p>
+      <p><strong>Métricas de proximidade.</strong> A distância euclidiana trata todas as bandas como independentes e de igual variância; a distância de Mahalanobis pondera a distância pela matriz de covariância da classe k e incorpora a forma e a orientação da nuvem (RICHARDS, 2022).</p>
+      <div class="formula-box">$$d_{E}(\mathbf{x}, \boldsymbol{\mu}_k) = \sqrt{(\mathbf{x}-\boldsymbol{\mu}_k)^{T}(\mathbf{x}-\boldsymbol{\mu}_k)} \qquad d_{M}(\mathbf{x}, \boldsymbol{\mu}_k) = \sqrt{(\mathbf{x}-\boldsymbol{\mu}_k)^{T}\,\boldsymbol{\Sigma}_k^{-1}\,(\mathbf{x}-\boldsymbol{\mu}_k)}$$</div>
+    </div>
+  </div>
+  <div class="block">
+    <h3>Dimensionalidade e separabilidade</h3>
+    <div class="prose">
+      <p><strong>Dimensionalidade e correlação.</strong> Bandas adjacentes são fortemente correlacionadas, de modo que o acréscimo de dimensões não acrescenta informação na mesma proporção. Com tamanho amostral fixo, a acurácia média de classificadores estatísticos cresce com o número de atributos até um ótimo e depois decresce, fenômeno descrito por Hughes (1968). A consequência prática é dimensionar o número de amostras em função do número de atributos ou reduzir a dimensionalidade.</p>
+      <p><strong>Separabilidade.</strong> Antes de classificar, mede-se a sobreposição entre pares de classes. A distância de Jeffries-Matusita (JM) deriva da distância de Bhattacharyya (B) entre duas distribuições normais e varia de 0 (classes indistinguíveis) a 2 (separação completa); a divergência transformada tem comportamento análogo (RICHARDS, 2022).</p>
+      <div class="formula-box">$$B = \tfrac{1}{8}(\boldsymbol{\mu}_i-\boldsymbol{\mu}_j)^{T}\left[\tfrac{\boldsymbol{\Sigma}_i+\boldsymbol{\Sigma}_j}{2}\right]^{-1}(\boldsymbol{\mu}_i-\boldsymbol{\mu}_j) + \tfrac{1}{2}\ln\frac{\left|\tfrac{\boldsymbol{\Sigma}_i+\boldsymbol{\Sigma}_j}{2}\right|}{\sqrt{|\boldsymbol{\Sigma}_i|\,|\boldsymbol{\Sigma}_j|}} \qquad JM_{ij} = 2\left(1 - e^{-B}\right)$$</div>
+    </div>
+  </div>
+  <div class="block">
+    <h3>Classes espectrais e classes informacionais</h3>
+    <div class="prose"><p>Classe informacional é a categoria de interesse do analista (floresta, pastagem, área urbana); classe espectral é um agrupamento de pixels com resposta espectral homogênea no espaço de atributos (RICHARDS, 2022; JENSEN, 2016). A relação entre ambas raramente é biunívoca:</p></div>
+    <div class="table-scroll"><table class="doc-table">
+      <thead><tr><th>Situação</th><th>Exemplo</th><th>Consequência metodológica</th></tr></thead>
+      <tbody>
+        <tr><td>Uma classe informacional, várias classes espectrais</td><td>Floresta em vertente iluminada e em vertente sombreada</td><td>Coletar amostras por subclasse espectral e agregá-las após a classificação</td></tr>
+        <tr><td>Várias classes informacionais, uma classe espectral</td><td>Solo exposto e telhado cerâmico; sombra topográfica e água profunda</td><td>Acrescentar atributos (índices, textura, relevo) ou mudar a unidade de análise</td></tr>
+        <tr><td>Classe informacional definida por uso, e não por cobertura</td><td>Pastagem e campo nativo com mesma resposta espectral</td><td>Recorrer a séries temporais, contexto espacial ou dados auxiliares</td></tr>
+      </tbody>
+    </table></div>
+    <div class="prose"><p>A distinção fundamenta a abordagem híbrida: agrupar o espaço em classes espectrais e, em seguida, rotulá-las em classes informacionais (JENSEN, 2016).</p></div>
+  </div>
+</section>
+
+<!-- ================= 1.2 ================= -->
+<section class="step" id="unidade">
+  <div class="step-head"><span class="step-n">2</span><div><p class="eyebrow">Parte 1 · 1.2</p><h2>Unidade de análise: pixel ou objeto</h2></div></div>
+  <div class="prose">
+    <p>A unidade de análise define o que recebe o rótulo: o pixel isolado, descrito apenas por seu vetor espectral, ou o objeto de imagem, região contígua e relativamente homogênea descrita por atributos espectrais, geométricos, texturais e contextuais (BLASCHKE, 2010).</p>
+  </div>
+  <div class="block">
+    <h3>Pixel a pixel e GEOBIA</h3>
+    <div class="prose">
+      <p><strong>Classificação pixel a pixel.</strong> A decisão considera somente o vetor espectral do pixel, sem informação sobre a vizinhança. Em resolução espacial média, o problema dominante é o pixel misto; em resolução alta, a variabilidade intraclasse (sombras de copa, clareiras, materiais distintos em um mesmo telhado) aumenta, e pixels vizinhos de uma mesma feição recebem rótulos diferentes. O padrão resultante, de pixels isolados dispersos sobre classes homogêneas, é denominado efeito “sal e pimenta” (BLASCHKE, 2010; BLASCHKE et al., 2014).</p>
+      <p><strong>Análise de imagens baseada em objetos geográficos (GEOBIA).</strong> O termo foi proposto para situar a análise baseada em objetos como subdisciplina da Ciência da Informação Geográfica (HAY; CASTILLA, 2008). O procedimento compreende duas etapas: segmentação da imagem em objetos e classificação desses objetos com base em atributos que o pixel isolado não possui, como área, forma, textura e relações topológicas com objetos vizinhos e com níveis hierárquicos superiores e inferiores (BLASCHKE et al., 2014).</p>
+    </div>
+  </div>
+  <div class="block">
+    <h3>Segmentação multirresolução</h3>
+    <div class="prose">
+      <p>O algoritmo de Baatz e Schäpe (2000) é um crescimento de regiões de baixo para cima: parte de objetos de um pixel e funde, a cada iteração, o par de objetos adjacentes cuja fusão produz o menor aumento de heterogeneidade. A heterogeneidade combina um termo espectral (cor) e um termo de forma, ponderados por w:</p>
+      <div class="formula-box">$$f = w\,h_{cor} + (1-w)\,h_{forma} \qquad h_{cor} = \sum_{c} w_c \left[ n_{fus}\,\sigma_{c}^{fus} - \left( n_{1}\,\sigma_{c}^{1} + n_{2}\,\sigma_{c}^{2} \right) \right]$$</div>
+      <p>em que n é o número de pixels, σ o desvio-padrão na banda c e w_c o peso da banda; o termo de forma combina compacidade e suavidade da borda. A fusão é interrompida quando o menor aumento possível excede o quadrado do parâmetro de escala, de modo que esse parâmetro controla indiretamente o tamanho médio dos objetos (BAATZ; SCHÄPE, 2000). Escalas pequenas produzem sobressegmentação (uma feição dividida em vários objetos); escalas grandes produzem subsegmentação (feições distintas no mesmo objeto), erro que nenhuma classificação posterior corrige.</p>
+    </div>
+    <div class="table-scroll"><table class="doc-table">
+      <thead><tr><th>Critério</th><th>Pixel a pixel</th><th>Baseada em objetos (GEOBIA)</th></tr></thead>
+      <tbody>
+        <tr><td>Unidade de decisão</td><td>Pixel</td><td>Segmento (objeto de imagem)</td></tr>
+        <tr><td>Atributos disponíveis</td><td>Espectrais (e índices)</td><td>Espectrais, geométricos, texturais, contextuais e hierárquicos</td></tr>
+        <tr><td>Ruído no mapa</td><td>Efeito sal e pimenta, sobretudo em alta resolução</td><td>Reduzido; erros ocorrem em blocos (objeto inteiro)</td></tr>
+        <tr><td>Parâmetros críticos</td><td>Amostras e algoritmo</td><td>Também escala, pesos de cor e forma da segmentação</td></tr>
+        <tr><td>Avaliação da acurácia</td><td>Por pixel</td><td>Exige definir se a unidade amostral é o pixel ou o objeto</td></tr>
+        <tr><td>Adequação típica</td><td>Resolução média e classes espectralmente distintas</td><td>Alta resolução e classes definidas por forma ou contexto</td></tr>
+      </tbody>
+    </table></div>
+    <div class="prose"><p>Com pixels de 10 m do Sentinel-2, o ganho da GEOBIA é menor que em imagens submétricas, mas a segmentação ainda reduz o ruído e permite atributos de forma para talhões agrícolas e corpos d’água. A comparação interativa entre pixel e objeto está na <a href="../classificacao/#objeto">etapa 5 do Dia 2</a>.</p></div>
+  </div>
+</section>
+
+<!-- ================= 1.3 ================= -->
+<section class="step" id="naosup">
+  <div class="step-head"><span class="step-n">3</span><div><p class="eyebrow">Parte 1 · 1.3</p><h2>Métodos não supervisionados: K-Means e ISODATA</h2></div></div>
+  <div class="prose"><p>Métodos não supervisionados particionam o espaço de atributos sem amostras rotuladas; o resultado são classes espectrais, que o analista rotula a posteriori como classes informacionais (RICHARDS, 2022; JENSEN, 2016).</p></div>
+  <div class="block">
+    <h3>K-Means e ISODATA</h3>
+    <div class="prose">
+      <p><strong>K-Means.</strong> Dado um número k de agrupamentos, o algoritmo busca a partição que minimiza a soma dos quadrados das distâncias euclidianas entre cada pixel e o centro do agrupamento ao qual pertence (MACQUEEN, 1967):</p>
+      <div class="formula-box">$$J = \sum_{k=1}^{K} \sum_{\mathbf{x} \in C_k} \left\| \mathbf{x} - \boldsymbol{\mu}_k \right\|^{2}$$</div>
+      <p>A solução usual é iterativa, na forma descrita por Lloyd (1982): (1) inicializam-se k centros; (2) cada pixel é atribuído ao centro mais próximo; (3) cada centro é recalculado como a média dos pixels atribuídos; (4) os passos 2 e 3 se repetem até que a fração de pixels que muda de grupo fique abaixo de um limiar. Cada iteração não aumenta J, de modo que o processo converge, mas para um mínimo local que depende da inicialização. A animação dessas iterações está na <a href="../classificacao/#kmedias">etapa 3 do Dia 2</a>.</p>
+      <p><strong>ISODATA.</strong> O <em>Iterative Self-Organizing Data Analysis Technique</em> (BALL; HALL, 1965) acrescenta ao ciclo do K-Means regras de divisão e fusão que ajustam o número de agrupamentos durante a execução (TOU; GONZALEZ, 1974):</p>
+      <ul>
+        <li>eliminação de agrupamentos com menos pixels que um mínimo definido;</li>
+        <li>divisão de um agrupamento quando o desvio-padrão máximo em alguma banda excede um limiar, com dois novos centros deslocados ao longo dessa banda;</li>
+        <li>fusão de pares de agrupamentos cujos centros estão a uma distância inferior a um limiar;</li>
+        <li>repetição até o número máximo de iterações ou até a estabilização dos centros.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="block">
+    <h3>Comparação, vantagens e limitações</h3>
+    <div class="table-scroll"><table class="doc-table">
+      <thead><tr><th>Aspecto</th><th>K-Means</th><th>ISODATA</th></tr></thead>
+      <tbody>
+        <tr><td>Número de agrupamentos</td><td>Fixo (k definido a priori)</td><td>Variável, entre limites definidos pelo analista</td></tr>
+        <tr><td>Parâmetros</td><td>k, critério de convergência, iterações</td><td>Também tamanho mínimo, limiar de desvio-padrão (divisão), distância mínima entre centros (fusão)</td></tr>
+        <tr><td>Geometria implícita</td><td>Agrupamentos esféricos, de variância semelhante (distância euclidiana)</td><td>Idem, atenuada pelas regras de divisão</td></tr>
+        <tr><td>Custo computacional</td><td>Menor</td><td>Maior, pelas etapas de divisão e fusão</td></tr>
+        <tr><td>Sensibilidade</td><td>Inicialização e valores extremos</td><td>Inicialização e escolha dos limiares</td></tr>
+      </tbody>
+    </table></div>
+    <div class="prose">
+      <p><strong>Vantagens.</strong> Não exigem amostras de treinamento, revelam a estrutura espectral da cena e auxiliam a definição da legenda e a coleta de amostras para uma classificação supervisionada posterior (JENSEN, 2016).</p>
+      <p><strong>Limitações.</strong> Os agrupamentos são espectrais e não correspondem necessariamente às classes informacionais (seção 1.1); a distância euclidiana favorece agrupamentos esféricos e é dominada pelas bandas de maior variância, o que recomenda verificar a escala dos atributos; o resultado varia entre execuções. Na prática, geram-se mais agrupamentos que as classes de interesse, que são rotulados e agregados pelo analista (JENSEN, 2016; RICHARDS, 2022).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 1.4 ================= -->
+<section class="step" id="sup">
+  <div class="step-head"><span class="step-n">4</span><div><p class="eyebrow">Parte 1 · 1.4</p><h2>Métodos supervisionados: paramétricos e não paramétricos</h2></div></div>
+  <div class="prose"><p>Classificadores paramétricos supõem um modelo de distribuição para cada classe e estimam seus parâmetros a partir das amostras; classificadores não paramétricos aprendem as fronteiras de decisão diretamente dos dados, sem pressupor a forma das distribuições (RICHARDS, 2022; MAXWELL; WARNER; FANG, 2018). As animações passo a passo de MaxVer, k-NN e Random Forest estão na <a href="../classificacao/#supervisionada">etapa 4 do Dia 2</a>.</p></div>
+  <div class="block">
+    <h3>Máxima Verossimilhança (MaxVer)</h3>
+    <div class="prose">
+      <p>A MaxVer modela cada classe ω_k por uma distribuição normal multivariada, definida pelo vetor de médias μ_k e pela matriz de covariância Σ_k estimados das amostras de treinamento. Pela regra de Bayes, o pixel x é atribuído à classe com maior função discriminante (RICHARDS, 2022):</p>
+      <div class="formula-box">$$g_k(\mathbf{x}) = \ln p(\omega_k) - \tfrac{1}{2}\ln\left|\boldsymbol{\Sigma}_k\right| - \tfrac{1}{2}(\mathbf{x}-\boldsymbol{\mu}_k)^{T}\boldsymbol{\Sigma}_k^{-1}(\mathbf{x}-\boldsymbol{\mu}_k)$$</div>
+      <p>O terceiro termo é o quadrado da distância de Mahalanobis (seção 1.1): o classificador incorpora dispersão e correlação entre bandas, e as fronteiras resultantes são superfícies quadráticas. Com probabilidades a priori iguais, o primeiro termo é constante e pode ser omitido. Um limiar sobre g_k, baseado na distribuição qui-quadrado da distância de Mahalanobis, permite deixar sem classe pixels improváveis em todas as classes (RICHARDS, 2022).</p>
+      <ul>
+        <li><strong>Normalidade e unimodalidade.</strong> Classes informacionais multimodais (floresta iluminada e sombreada) violam o modelo e devem ser divididas em subclasses espectrais.</li>
+        <li><strong>Tamanho amostral.</strong> A matriz Σ_k só é invertível com mais amostras independentes que atributos; recomenda-se um mínimo da ordem de 10n pixels por classe, sendo n o número de atributos, e preferencialmente mais (RICHARDS, 2022) <span class="pend">[Conferir a página da recomendação na edição utilizada]</span>.</li>
+        <li><strong>Dimensionalidade.</strong> O número de parâmetros por classe cresce com n², o que torna a MaxVer sensível ao fenômeno de Hughes (HUGHES, 1968).</li>
+      </ul>
+    </div>
+  </div>
+  <div class="block">
+    <h3>Árvores de decisão (CART) e Random Forest</h3>
+    <div class="prose">
+      <p><strong>CART.</strong> O método <em>Classification and Regression Trees</em> particiona recursivamente o espaço de atributos por divisões binárias do tipo “atributo ≤ limiar” (BREIMAN et al., 1984). Em cada nó, escolhe-se a divisão que maximiza a redução da impureza, medida pelo índice de Gini:</p>
+      <div class="formula-box">$$G(t) = 1 - \sum_{k=1}^{K} p_k(t)^{2} \qquad \Delta G = G(t) - \frac{n_L}{n_t}\,G(t_L) - \frac{n_R}{n_t}\,G(t_R)$$</div>
+      <p>em que p_k(t) é a proporção da classe k no nó t. O crescimento é seguido de poda por custo-complexidade para reduzir o sobreajuste (BREIMAN et al., 1984). As fronteiras são segmentos paralelos aos eixos; a árvore é interpretável e não exige normalidade, mas apresenta alta variância: pequenas mudanças nas amostras alteram a estrutura da árvore.</p>
+      <p><strong>Random Forest.</strong> O método reduz a variância da árvore isolada por meio de um conjunto de árvores não podadas, cada uma treinada com uma amostra <em>bootstrap</em> do conjunto de treinamento (<em>bagging</em>) e com sorteio de um subconjunto de atributos em cada nó; a classe final é decidida por voto majoritário (BREIMAN, 2001). Os parâmetros principais são o número de árvores e o número de atributos sorteados por nó, usualmente a raiz quadrada do número total de atributos (BELGIU; DRĂGUŢ, 2016).</p>
+      <ul>
+        <li><strong>Erro <em>out-of-bag</em>.</strong> Cada amostra <em>bootstrap</em> deixa de fora cerca de um terço das amostras; classificá-las com as árvores que não as viram fornece uma estimativa interna do erro (BREIMAN, 2001). Essa estimativa não substitui a validação com amostra independente (seção 1.5).</li>
+        <li><strong>Importância de variáveis.</strong> A redução média da acurácia, obtida pela permutação dos valores de um atributo nas amostras <em>out-of-bag</em>, e a redução média da impureza de Gini indicam a contribuição de cada atributo (BREIMAN, 2001; BELGIU; DRĂGUŢ, 2016).</li>
+        <li><strong>Comportamento.</strong> O método lida com muitos atributos e com multicolinearidade e é pouco propenso a sobreajuste com o aumento do número de árvores, mas é sensível ao desenho amostral e ao desbalanceamento entre classes (BELGIU; DRĂGUŢ, 2016).</li>
+      </ul>
+    </div>
+  </div>
+  <div class="block">
+    <h3>Support Vector Machines (SVM) e aprendizado profundo</h3>
+    <div class="prose">
+      <p><strong>SVM.</strong> O SVM busca, em problemas binários, o hiperplano que separa as classes com margem máxima; a margem é definida pelos vetores de suporte, amostras situadas na fronteira entre as classes (CORTES; VAPNIK, 1995). Na formulação de margem flexível, variáveis de folga ξ_i admitem amostras do lado errado, com penalidade C:</p>
+      <div class="formula-box">$$\min_{\mathbf{w},\,b,\,\xi}\; \tfrac{1}{2}\|\mathbf{w}\|^{2} + C\sum_{i=1}^{N}\xi_i \quad \text{sujeito a} \quad y_i\left(\mathbf{w}^{T}\phi(\mathbf{x}_i) + b\right) \geq 1 - \xi_i,\; \xi_i \geq 0$$</div>
+      <p>A função φ projeta os dados em um espaço de maior dimensão, no qual a separação linear corresponde a uma fronteira não linear no espaço original; na prática, usa-se um núcleo (<em>kernel</em>), como o gaussiano K(x, x′) = exp(−γ‖x − x′‖²), sem calcular φ explicitamente (CORTES; VAPNIK, 1995). Problemas multiclasse são decompostos em problemas binários (um contra um ou um contra todos). Em sensoriamento remoto, o SVM apresenta bom desempenho com conjuntos de treinamento pequenos, mas depende do ajuste de C e γ, usualmente por validação cruzada (MOUNTRAKIS; IM; OGOLE, 2011).</p>
+      <p><strong>Transição para o aprendizado profundo.</strong> Os métodos anteriores classificam vetores de atributos definidos pelo analista. Redes neurais convolucionais (CNN) aprendem, a partir dos dados, filtros que extraem atributos espaciais e espectrais em níveis hierárquicos (LECUN; BENGIO; HINTON, 2015). Para mapeamento, a segmentação semântica atribui uma classe a cada pixel; a arquitetura U-Net combina um codificador, que reduz a resolução e amplia o contexto, e um decodificador simétrico, com conexões que recuperam o detalhe espacial (RONNEBERGER; FISCHER; BROX, 2015). Em sensoriamento remoto, essas abordagens dependem de grandes conjuntos de dados rotulados em recortes de imagem e de capacidade computacional específica (ZHU et al., 2017; MA et al., 2019).</p>
+    </div>
+  </div>
+  <div class="block">
+    <h3>Quadro comparativo</h3>
+    <div class="table-scroll"><table class="doc-table">
+      <thead><tr><th>Critério</th><th>MaxVer</th><th>CART</th><th>Random Forest</th><th>SVM</th><th>CNN / U-Net</th></tr></thead>
+      <tbody>
+        <tr><td>Natureza</td><td>Paramétrico (gaussiano)</td><td>Não paramétrico</td><td>Não paramétrico (conjunto)</td><td>Não paramétrico (núcleo)</td><td>Não paramétrico (aprendizado de atributos)</td></tr>
+        <tr><td>Fronteira de decisão</td><td>Quadrática</td><td>Paralela aos eixos, em degraus</td><td>Paralela aos eixos, suavizada pelo voto</td><td>Hiperplano no espaço do núcleo</td><td>Aprendida, espacial e espectral</td></tr>
+        <tr><td>Parâmetros principais</td><td>Probabilidades a priori, limiar de rejeição</td><td>Profundidade, poda</td><td>Número de árvores, atributos por nó</td><td>C, γ (núcleo)</td><td>Arquitetura, taxa de aprendizado, épocas</td></tr>
+        <tr><td>Exigência de amostras</td><td>Mais que n por classe; sensível à dimensionalidade</td><td>Moderada</td><td>Moderada; sensível ao desbalanceamento</td><td>Baixa a moderada</td><td>Muito alta (recortes rotulados)</td></tr>
+        <tr><td>Interpretabilidade</td><td>Alta (médias, covariâncias)</td><td>Alta (regras)</td><td>Média (importância de variáveis)</td><td>Baixa</td><td>Baixa</td></tr>
+        <tr><td>Atributos heterogêneos (índices, MDE)</td><td>Viola a normalidade</td><td>Adequado</td><td>Adequado</td><td>Exige padronização</td><td>Adequado</td></tr>
+        <tr><td>Fontes</td><td>Richards (2022)</td><td>Breiman et al. (1984)</td><td>Breiman (2001); Belgiu e Drăguţ (2016)</td><td>Cortes e Vapnik (1995); Mountrakis, Im e Ogole (2011)</td><td>Ronneberger, Fischer e Brox (2015); Ma et al. (2019)</td></tr>
+      </tbody>
+    </table></div>
+    <div class="prose"><p>A comparação empírica de Maxwell, Warner e Fang (2018) indica que o desempenho relativo depende do conjunto de dados, das amostras e do ajuste de parâmetros, e não apenas do algoritmo.</p></div>
+  </div>
+</section>
+
+<!-- ================= 1.5 ================= -->
+<section class="step" id="acuracia">
+  <div class="step-head"><span class="step-n">5</span><div><p class="eyebrow">Parte 1 · 1.5</p><h2>Pós-classificação e avaliação da acurácia</h2></div></div>
+  <div class="prose"><p>Um mapa sem avaliação de acurácia baseada em amostra probabilística e independente não tem confiabilidade conhecida; a avaliação compreende desenho amostral, desenho de resposta (como se obtém o rótulo de referência) e análise (OLOFSSON et al., 2014; STEHMAN; FOODY, 2019).</p></div>
+  <div class="block">
+    <h3>Filtragem e amostragem de validação</h3>
+    <div class="prose">
+      <p><strong>Filtragem espacial de maioria.</strong> Um filtro de moda em janela móvel (3 × 3, 5 × 5) substitui o rótulo do pixel central pela classe mais frequente na janela, removendo pixels isolados; o filtro de tamanho mínimo (peneira) incorpora à classe vizinha manchas menores que a unidade mínima mapeável (JENSEN, 2016). Ambos reduzem o efeito sal e pimenta, mas erodem feições estreitas (rios, estradas) e cantos; a acurácia deve ser avaliada sobre o mapa final, já filtrado.</p>
+      <p><strong>Amostragem independente de validação.</strong> As amostras de validação devem ser selecionadas por desenho probabilístico (aleatório estratificado pelas classes mapeadas é o mais usual) e ser independentes das de treinamento (OLOFSSON et al., 2014; CONGALTON; GREEN, 2019). Pixels de validação retirados dos mesmos polígonos de treinamento, ou de sua vizinhança imediata, são espacialmente autocorrelacionados com eles e superestimam a acurácia. O rótulo de referência deve vir de fonte de qualidade superior à do mapa (campo ou imagem de maior resolução, na mesma data).</p>
+    </div>
+  </div>
+  <div class="block">
+    <h3>Matriz de confusão e métricas</h3>
+    <div class="prose"><p>Na convenção de Congalton (1991), as linhas trazem a classe mapeada e as colunas a classe de referência; n_ij é o número de amostras mapeadas como i e de referência j, n_i+ o total da linha e n_+j o total da coluna.</p></div>
+    <div class="table-scroll"><table class="doc-table">
+      <thead><tr><th>Métrica</th><th>Definição</th><th>Pergunta que responde</th></tr></thead>
+      <tbody>
+        <tr><td>Exatidão global</td><td>Σ n_ii / n</td><td>Que fração do mapa está correta?</td></tr>
+        <tr><td>Exatidão do produtor (classe j)</td><td>n_jj / n_+j</td><td>Que fração da classe j no terreno foi mapeada como j? (visão de quem produz o mapa)</td></tr>
+        <tr><td>Erro de omissão (classe j)</td><td>1 − exatidão do produtor</td><td>Que fração da classe j ficou fora dela no mapa?</td></tr>
+        <tr><td>Exatidão do usuário (classe i)</td><td>n_ii / n_i+</td><td>Ao consultar um pixel mapeado como i, qual a chance de ele ser i no terreno? (visão de quem usa o mapa)</td></tr>
+        <tr><td>Erro de comissão (classe i)</td><td>1 − exatidão do usuário</td><td>Que fração do que foi mapeado como i pertence a outra classe?</td></tr>
+      </tbody>
+    </table></div>
+    <div class="prose"><p>Com amostragem estratificada em que a proporção da amostra difere da proporção de área mapeada, as contagens devem ser convertidas em proporções de área, p_ij = W_i n_ij / n_i+, sendo W_i a fração da área mapeada como i; as métricas e as áreas estimadas por classe, com intervalos de confiança, são calculadas sobre essas proporções (OLOFSSON et al., 2014).</p></div>
+  </div>
+  <div class="block">
+    <h3>Crítica ao kappa; discordância de quantidade e de alocação</h3>
+    <div class="prose">
+      <p>O coeficiente kappa compara a concordância observada p_o com a concordância esperada ao acaso p_e, calculada a partir dos totais marginais (COHEN, 1960):</p>
+      <div class="formula-box">$$\kappa = \frac{p_o - p_e}{1 - p_e} \qquad p_o = \sum_{i} p_{ii} \qquad p_e = \sum_{i} p_{i+}\,p_{+i}$$</div>
+      <p>Pontius Jr. e Millones (2011) e Foody (2020) apontam que: (1) a concordância ao acaso não é referência pertinente, pois nenhum mapa é produzido por sorteio; (2) o kappa depende da prevalência das classes, de modo que mapas com a mesma exatidão global podem ter kappas muito distintos; (3) o índice é altamente correlacionado com a exatidão global e não acrescenta informação sobre a natureza do erro. Recomenda-se relatar a matriz, a exatidão global e as exatidões por classe, em vez do kappa (FOODY, 2020).</p>
+      <p>Pontius Jr. e Millones (2011) decompõem a discordância total (1 − exatidão global) em duas parcelas, calculadas sobre a matriz em proporções:</p>
+      <div class="formula-box">$$Q = \tfrac{1}{2}\sum_{g}\left| \sum_{i} p_{ig} - \sum_{j} p_{gj} \right| \qquad A = \tfrac{1}{2}\sum_{g} 2\min\left( \sum_{i} p_{ig} - p_{gg},\; \sum_{j} p_{gj} - p_{gg} \right) \qquad 1 - p_o = Q + A$$</div>
+      <p>A discordância de quantidade (Q) expressa a diferença entre as proporções de cada classe no mapa e na referência: o mapa tem mais ou menos área de uma classe do que deveria. A discordância de alocação (A) expressa o erro de posição: a proporção pode estar correta, mas em lugares trocados. A distinção orienta a correção: Q elevado sugere viés do classificador ou amostras desbalanceadas; A elevado sugere confusão espectral ou problemas de registro.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PARTE 2 ================= -->
+<section class="step" id="pratica">
+  <div class="step-head"><span class="step-n">6</span><div><p class="eyebrow">Parte 2 · 2.1 a 2.4</p><h2>Roteiro de demonstração prática</h2></div></div>
+  <div class="prose">
+    <p>A demonstração segue o fluxo real de trabalho no Google Earth Engine (GORELICK et al., 2017), com equivalências no QGIS, sobre uma composição Sentinel-2 nível 2A (DRUSCH et al., 2012). Sugere-se uma área com relevo acidentado, corpos d’água, núcleo urbano e lavouras, por exemplo a região dos cânions entre Cambará do Sul (RS) e Praia Grande (SC), centrada em aproximadamente −29,17, −50,02 (latitude, longitude) <span class="pend">[Conferir coordenadas]</span>. No Earth Engine, a ordem dos argumentos de ee.Geometry.Point é longitude, latitude.</p>
+  </div>
+  <div class="block">
+    <h3>Fluxo de trabalho</h3>
+    <svg class="flow-svg" viewBox="0 0 760 392" role="img" aria-label="A acurácia validada decide se o fluxo volta às amostras e aos atributos" id="flow"></svg>
+    <div class="prose"><p>As etapas 2.1 a 2.4 percorrem esse fluxo; quando a validação indica erro alto, retorna-se às amostras e aos atributos, e não apenas ao algoritmo.</p></div>
+    <p class="small"><strong>Preparação comum (mostrar antes das etapas).</strong></p>
+    <div class="code" data-lang="javascript"><pre><code>// Centro aproximado: latitude -29.17, longitude -50.02 (conferir)
+var aoi = ee.Geometry.Point([-50.02, -29.17]).buffer(15000).bounds();
+var bandas = ['B2','B3','B4','B5','B6','B7','B8','B8A','B11','B12'];
+var s2 = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+  .filterBounds(aoi).filterDate('2024-01-01', '2024-12-31')
+  .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 30))
+  .map(function (img) {
+    // SCL: 3 sombra de nuvem, 8-10 nuvens e cirros, 11 neve
+    var ok = img.select('SCL').remap([3, 8, 9, 10, 11], [0, 0, 0, 0, 0], 1);
+    return img.select(bandas).updateMask(ok).divide(10000)
+      .copyProperties(img, ['system:time_start']);
+  });
+var comp = s2.median().clip(aoi);
+Map.centerObject(aoi, 12);
+Map.addLayer(comp, {bands: ['B8','B4','B3'], min: 0, max: 0.4}, 'Falsa-cor 8-4-3');</code></pre></div>
+  </div>
+  <div class="block">
+    <h3>2.1 Inspeção do espaço espectral</h3>
+    <div class="prose">
+      <p>Objetivo: mostrar que cada algoritmo particiona o mesmo gráfico de dispersão vermelho × infravermelho próximo de forma diferente.</p>
+      <ol>
+        <li><strong>Gráfico de dispersão das amostras.</strong> Com as amostras rotuladas (etapa 2.2), plotar B4 × B8 colorido por classe. Apontar as nuvens de água (baixa reflectância nas duas bandas), vegetação (B8 alto, B4 baixo), solo e área urbana (sobrepostos) e sombra topográfica (próxima da água).</li>
+        <li><strong>Fronteiras de decisão.</strong> Gerar uma grade regular de pontos no plano B4 × B8, classificá-la com cada algoritmo treinado apenas nessas duas bandas e plotar a classe prevista; a grade colorida mostra as regiões de decisão.</li>
+        <li><strong>Comparar três partições.</strong> K-Means (regiões de Voronoi em torno dos centros, sem rótulos), distância de Mahalanobis (fronteiras curvas, análogas às da MaxVer) e Random Forest (fronteiras em degraus, paralelas aos eixos).</li>
+      </ol>
+    </div>
+    <div class="code" data-lang="javascript"><pre><code>// Executar após definir treinoPol (etapa 2.2)
+var treino2 = comp.select(['B4','B8']).sampleRegions({
+  collection: treinoPol, properties: ['classe'], scale: 10});
+print(ui.Chart.feature.groups(treino2, 'B4', 'B8', 'classe')
+  .setChartType('ScatterChart').setOptions({pointSize: 3,
+  hAxis: {title: 'B4 (vermelho)'}, vAxis: {title: 'B8 (IV próximo)'}}));
+
+// Grade no espaço de atributos (51 x 84 = 4284 pontos; limite dos gráficos: 5000)
+var grade = ee.FeatureCollection(ee.List.sequence(0, 0.30, 0.006).map(function (r) {
+  return ee.List.sequence(0, 0.50, 0.006).map(function (n) {
+    return ee.Feature(null, {B4: r, B8: n});
+  });
+}).flatten());
+var rf2 = ee.Classifier.smileRandomForest(100).train(treino2, 'classe', ['B4','B8']);
+var mh2 = ee.Classifier.minimumDistance('mahalanobis').train(treino2, 'classe', ['B4','B8']);
+var km2 = ee.Clusterer.wekaKMeans(5).train(treino2.select(['B4','B8']));
+function plot(fc, titulo) {
+  print(ui.Chart.feature.groups(fc, 'B4', 'B8', 'pred').setChartType('ScatterChart')
+    .setOptions({title: titulo, pointSize: 2}));
+}
+plot(grade.classify(rf2, 'pred'), 'Random Forest');
+plot(grade.classify(mh2, 'pred'), 'Distância de Mahalanobis');
+plot(grade.cluster(km2, 'pred'), 'K-Means (agrupamentos sem rótulo)');</code></pre></div>
+    <div class="prose"><p>O Earth Engine não oferece a MaxVer gaussiana; ee.Classifier.minimumDistance com métrica 'mahalanobis' reproduz o termo de Mahalanobis da função discriminante, mas omite ln|Σ_k| e as probabilidades a priori (seção 1.4). Para a MaxVer propriamente dita, usar o algoritmo GMM do complemento dzetsaka no QGIS (KARASIAK, 2016).</p></div>
+  </div>
+  <div class="block">
+    <h3>2.2 Coleta de amostras de treinamento (ROIs) e separabilidade</h3>
+    <div class="prose">
+      <p>Objetivo: mostrar que a qualidade das amostras condiciona o resultado mais que a escolha do algoritmo (BELGIU; DRĂGUŢ, 2016; MAXWELL; WARNER; FANG, 2018).</p>
+      <ol>
+        <li><strong>Legenda e subclasses.</strong> Definir a legenda informacional e, quando necessário, subclasses espectrais (floresta iluminada e floresta sombreada) a serem agregadas depois (seção 1.1).</li>
+        <li><strong>Amostra pura versus amostra contaminada.</strong> Desenhar dois polígonos de água: um no centro de um reservatório e outro tocando a margem vegetada. Exibir o histograma de B8 de cada um: o polígono de borda apresenta cauda de valores altos (pixels mistos água-vegetação), que desloca a média e infla a covariância da classe. Regra prática: recuar o polígono pelo menos um pixel (10 m) da borda.</li>
+        <li><strong>Distribuição espacial.</strong> Coletar vários polígonos pequenos espalhados pela cena, em vez de poucos polígonos grandes, para representar a variabilidade intraclasse.</li>
+        <li><strong>Separação treino/validação por polígono.</strong> Sortear polígonos inteiros, e não pixels, para treino e validação, evitando autocorrelação espacial entre os dois conjuntos (seção 1.5).</li>
+        <li><strong>Separabilidade antes do modelo.</strong> Calcular a distância de Jeffries-Matusita entre pares de classes (seção 1.1); pares com JM bem abaixo de 2 indicam confusão provável e orientam a etapa 2.3.</li>
+      </ol>
+    </div>
+    <div class="code" data-lang="javascript"><pre><code>// roi: FeatureCollection de polígonos com a propriedade 'classe' (0 a 4)
+var roiR = roi.randomColumn('sorteio', 42);
+var treinoPol = roiR.filter(ee.Filter.lt('sorteio', 0.7));
+var validPol  = roiR.filter(ee.Filter.gte('sorteio', 0.7));
+Export.table.toDrive({
+  collection: comp.sampleRegions({collection: treinoPol, properties: ['classe'], scale: 10}),
+  description: 'amostras_treino', fileFormat: 'CSV'});</code></pre></div>
+    <p class="small">Cálculo da separabilidade a partir do CSV exportado (Python, no console do QGIS ou em notebook):</p>
+    <div class="code" data-lang="python"><pre><code>import numpy as np, pandas as pd, itertools
+df = pd.read_csv('amostras_treino.csv')
+atrib = ['B2','B3','B4','B8','B11','B12']
+def jm(a, b):
+    m1, m2 = a.mean(0), b.mean(0)
+    s1, s2 = np.cov(a.T), np.cov(b.T)
+    s = (s1 + s2) / 2; d = m1 - m2
+    bh = d @ np.linalg.solve(s, d) / 8 + 0.5 * np.log(
+        np.linalg.det(s) / np.sqrt(np.linalg.det(s1) * np.linalg.det(s2)))
+    return 2 * (1 - np.exp(-bh))
+for i, j in itertools.combinations(sorted(df.classe.unique()), 2):
+    a = df.loc[df.classe == i, atrib].values; b = df.loc[df.classe == j, atrib].values
+    print(i, j, round(jm(a, b), 3))</code></pre></div>
+    <div class="prose"><p>No QGIS, o mesmo roteiro usa camada vetorial de polígonos com campo inteiro de classe; o gráfico de dispersão pode ser feito com um complemento de gráficos (por exemplo, DataPlotly) sobre os pontos amostrados <span class="pend">[Conferir disponibilidade na versão instalada]</span>.</p></div>
+  </div>
+  <div class="block">
+    <h3>2.3 Engenharia de atributos: espaço de atributos empilhado</h3>
+    <div class="prose"><p>Objetivo: mostrar que confusões espectrais clássicas se resolvem com atributos que acrescentam informação física, e não com outro algoritmo.</p></div>
+    <div class="table-scroll"><table class="doc-table">
+      <thead><tr><th>Atributo</th><th>Expressão (Sentinel-2)</th><th>Fonte</th><th>Confusão que ajuda a resolver</th></tr></thead>
+      <tbody>
+        <tr><td>NDVI</td><td>(B8 − B4) / (B8 + B4)</td><td>Rouse et al. (1974)</td><td>Vegetação × demais classes</td></tr>
+        <tr><td>NDWI</td><td>(B3 − B8) / (B3 + B8)</td><td>McFeeters (1996)</td><td>Água aberta × vegetação</td></tr>
+        <tr><td>MNDWI</td><td>(B3 − B11) / (B3 + B11)</td><td>Xu (2006)</td><td>Água × área construída e sombra</td></tr>
+        <tr><td>NDBI</td><td>(B11 − B8) / (B11 + B8)</td><td>Zha, Gao e Ni (2003)</td><td>Área construída × vegetação</td></tr>
+        <tr><td>Declividade e sombreamento do relevo</td><td>ee.Terrain.slope e ee.Terrain.hillshade sobre MDE</td><td>MDE SRTM de 30 m</td><td>Sombra topográfica × água</td></tr>
+        <tr><td>Textura (contraste GLCM em B8)</td><td>glcmTexture, janela 3 × 3</td><td>Haralick, Shanmugam e Dinstein (1973)</td><td>Área construída × solo exposto</td></tr>
+        <tr><td>Variabilidade temporal do NDVI</td><td>desvio-padrão anual do NDVI</td><td>Série Sentinel-2</td><td>Solo exposto agrícola (variável) × área construída (estável)</td></tr>
+      </tbody>
+    </table></div>
+    <div class="code" data-lang="javascript"><pre><code>var ndvi  = comp.normalizedDifference(['B8','B4']).rename('NDVI');
+var ndwi  = comp.normalizedDifference(['B3','B8']).rename('NDWI');
+var mndwi = comp.normalizedDifference(['B3','B11']).rename('MNDWI');
+var ndbi  = comp.normalizedDifference(['B11','B8']).rename('NDBI');
+var dem   = ee.Image('USGS/SRTMGL1_003').select('elevation');
+var decl  = ee.Terrain.slope(dem).rename('DECL');
+var az = s2.aggregate_mean('MEAN_SOLAR_AZIMUTH_ANGLE');
+var el = ee.Number(90).subtract(s2.aggregate_mean('MEAN_SOLAR_ZENITH_ANGLE'));
+var somb  = ee.Terrain.hillshade(dem, az, el).rename('HILLSHADE');
+var textura = comp.select('B8').multiply(10000).toInt()
+  .glcmTexture({size: 3}).select('B8_contrast').rename('TEXT_B8');
+var dpNdvi = s2.map(function (i) { return i.normalizedDifference(['B8','B4']); })
+  .reduce(ee.Reducer.stdDev()).rename('NDVI_DP');
+var pilha = comp.addBands([ndvi, ndwi, mndwi, ndbi, decl, somb, textura, dpNdvi]);
+
+// Modelo A: apenas bandas; Modelo B: espaço empilhado
+var trA = comp.sampleRegions({collection: treinoPol, properties: ['classe'], scale: 10, tileScale: 4});
+var trB = pilha.sampleRegions({collection: treinoPol, properties: ['classe'], scale: 10, tileScale: 4});
+var rfA = ee.Classifier.smileRandomForest({numberOfTrees: 300, seed: 42}).train(trA, 'classe', comp.bandNames());
+var rfB = ee.Classifier.smileRandomForest({numberOfTrees: 300, seed: 42}).train(trB, 'classe', pilha.bandNames());
+var mapaA = comp.classify(rfA).focalMode({radius: 1, kernelType: 'square', units: 'pixels'});
+var mapaB = pilha.classify(rfB).focalMode({radius: 1, kernelType: 'square', units: 'pixels'});
+print('Importância das variáveis (modelo B)', rfB.explain().get('importance'));</code></pre></div>
+    <div class="prose">
+      <p>Roteiro de demonstração:</p>
+      <ol>
+        <li><strong>Sombra × água.</strong> Exibir lado a lado o modelo A e o modelo B sobre as encostas sombreadas dos cânions. No modelo A, encostas opostas ao Sol aparecem como água: ambas têm reflectância baixa em todas as bandas. No modelo B, a declividade elevada, o sombreamento do relevo baixo e o MNDWI distinguem a sombra (vertente íngreme) da água (superfície plana).</li>
+        <li><strong>Solo exposto × área urbana.</strong> Mostrar o gráfico de dispersão NDBI × NDVI das amostras dessas duas classes: os valores se sobrepõem. Em seguida, plotar textura × desvio-padrão anual do NDVI: a área construída tem textura alta e NDVI estável; o solo agrícola alterna entre solo exposto e cultivo ao longo do ano.</li>
+        <li><strong>Importância das variáveis.</strong> Apresentar a saída de explain() do Random Forest e discutir quais atributos acrescentados entram entre os mais importantes (BREIMAN, 2001; BELGIU; DRĂGUŢ, 2016).</li>
+        <li><strong>Advertência sobre a MaxVer.</strong> Atributos como declividade e índices limitados entre −1 e 1 não seguem distribuição normal; o espaço empilhado favorece classificadores não paramétricos (seção 1.4). Para o SVM, padronizar os atributos antes do treinamento.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="block">
+    <h3>2.4 Análise crítica dos resultados</h3>
+    <div class="prose">
+      <p>Objetivo: ler o mapa e a matriz de confusão como evidência de onde e por que o classificador erra.</p>
+      <ol>
+        <li>Comparar os mapas A e B com a composição falsa-cor em uma tela dividida (ui.SplitPanel no Earth Engine).</li>
+        <li>Percorrer quatro alvos: encostas sombreadas, borda urbana, talhões recém-colhidos e cursos d’água estreitos (estes últimos para mostrar a erosão causada pelo filtro de maioria).</li>
+        <li>Gerar a amostra de validação por sorteio aleatório estratificado sobre o mapa final e rotulá-la por fotointerpretação em imagem de maior resolução (OLOFSSON et al., 2014).</li>
+      </ol>
+    </div>
+    <div class="code" data-lang="javascript"><pre><code>var pontos = mapaB.stratifiedSample({numPoints: 100, classBand: 'classification',
+  region: aoi, scale: 10, seed: 7, geometries: true});
+Export.table.toDrive({collection: pontos, description: 'validacao_para_rotular'});
+// Após rotular (propriedade 'ref'): matriz no Earth Engine
+// Atenção: em errorMatrix(real, previsto), as LINHAS são a referência,
+// isto é, a transposta da convenção de Congalton (1991) usada neste material.
+var rotulados = ee.FeatureCollection('projects/SEU_PROJETO/assets/validacao_rotulada'); // ajustar o caminho
+var em = rotulados.errorMatrix('ref', 'classification');
+print(em, em.accuracy(), em.producersAccuracy(), em.consumersAccuracy());</code></pre></div>
+  </div>
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>Matriz de confusão simulada</h3><span class="eyebrow">Valores ilustrativos · 100 pontos por classe mapeada</span></div>
+      <p class="small muted">Linhas: classe mapeada; colunas: referência; W = proporção da área mapeada em cada classe. Alterne entre os modelos e entre a leitura da amostra e a estimativa ponderada por área (OLOFSSON et al., 2014).</p>
+      <div class="row">
+        <div class="seg" role="group" aria-label="Modelo" id="seg-model">
+          <button data-v="A" aria-pressed="true">Modelo A: apenas bandas</button>
+          <button data-v="B" aria-pressed="false">Modelo B: espaço empilhado</button>
+        </div>
+        <div class="seg" role="group" aria-label="Leitura" id="seg-w">
+          <button data-v="w" aria-pressed="true">Estimativa ponderada por área</button>
+          <button data-v="s" aria-pressed="false">Contagens da amostra</button>
+        </div>
+      </div>
+      <div class="table-scroll"><table class="cmx" id="cmx"></table></div>
+      <div class="readout">
+        <div><span>Exatidão global</span><strong id="m-oa"></strong></div>
+        <div><span>Kappa</span><strong id="m-k"></strong></div>
+        <div><span>Discordância de quantidade (Q)</span><strong id="m-q"></strong></div>
+        <div><span>Discordância de alocação (A)</span><strong id="m-a"></strong></div>
+      </div>
+      <div class="qa" aria-hidden="true"><span id="qa-c" style="background:var(--ok)"></span><span id="qa-q" style="background:var(--mid)"></span><span id="qa-a" style="background:var(--no)"></span></div>
+      <div class="qa-leg"><span><i style="background:var(--ok)"></i>Concordância</span><span><i style="background:var(--mid)"></i>Quantidade (Q)</span><span><i style="background:var(--no)"></i>Alocação (A)</span></div>
+      <p class="callout small" id="m-txt"></p>
+    </div>
+    <div class="prose">
+      <p>Roteiro de interpretação com a turma:</p>
+      <ol>
+        <li><strong>Onde está o erro?</strong> No modelo A, 25 dos 100 pontos mapeados como água são floresta na referência: erro de comissão da água causado pela sombra topográfica. Solo exposto e área urbana trocam rótulos entre si (24 e 27 pontos), confusão recíproca prevista pela sobreposição no gráfico de dispersão (etapa 2.1) e pela baixa separabilidade (etapa 2.2).</li>
+        <li><strong>Produtor ou usuário?</strong> Para quem usa o mapa de áreas urbanas, a exatidão do usuário (68%) indica que cerca de um terço do que aparece como urbano não o é; para quem estima a expansão urbana, a exatidão do produtor (63%) indica que parte da área urbana real ficou fora do mapa.</li>
+        <li><strong>Por que as duas exatidões globais diferem?</strong> A estimativa ponderada corrige o fato de a amostra ter o mesmo número de pontos em classes de áreas muito distintas; só ela estima a acurácia do mapa (OLOFSSON et al., 2014).</li>
+        <li><strong>O que o kappa acrescenta?</strong> Kappa e exatidão global variam juntos entre os modelos e nada dizem sobre a natureza do erro (FOODY, 2020). A decomposição mostra que o ganho de B está sobretudo na alocação (de 13,2% para 6,6%): as proporções das classes já eram próximas das reais, mas os pixels estavam no lugar errado (PONTIUS JR.; MILLONES, 2011).</li>
+        <li><strong>O que a matriz não mostra?</strong> O erro em feições lineares estreitas, removidas pelo filtro de maioria e sub-representadas na amostra; discutir a inclusão de um estrato específico ou de verificação dirigida.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDES ================= -->
+<section class="step" id="slides">
+  <div class="step-head"><span class="step-n">7</span><div><p class="eyebrow">Apoio ao docente</p><h2>Sugestões de elementos visuais por slide</h2></div></div>
+  <div class="prose"><p>A sequência abaixo distribui a aula em 24 slides; cada linha indica o conteúdo e o elemento visual que sustenta a explicação. Recomenda-se que os gráficos dos slides 4, 10, 12, 13 e 22 usem as mesmas amostras e as mesmas cores de classe, para que os alunos comparem as partições sobre a mesma nuvem de pontos.</p></div>
+  <div class="block">
+    <div class="table-scroll"><table class="doc-table">
+      <thead><tr><th>Slide</th><th>Conteúdo</th><th>Elemento visual sugerido</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Título e objetivos</td><td>Composição falsa-cor Sentinel-2 da área de estudo ao lado do mapa classificado</td></tr>
+        <tr><td>2</td><td>Roteiro</td><td>Diagrama do fluxo da aula (espaço de atributos → unidade → algoritmo → pós-classificação → acurácia)</td></tr>
+        <tr><td>3</td><td>Pixel como vetor</td><td>Cubo de bandas com um pixel destacado e seu vetor de reflectâncias em gráfico de barras</td></tr>
+        <tr><td>4</td><td>Espaço de atributos</td><td>Gráfico de dispersão B4 × B8 com nuvens por classe; versão 3D (B4, B8, B11) girando, se houver recurso</td></tr>
+        <tr><td>5</td><td>Euclidiana × Mahalanobis</td><td>Duas nuvens elípticas e um pixel equidistante em termos euclidianos, mas não em Mahalanobis</td></tr>
+        <tr><td>6</td><td>Separabilidade e Hughes</td><td>Tabela de JM por par de classes (mapa de calor) e curva esquemática de acurácia × número de atributos</td></tr>
+        <tr><td>7</td><td>Classes espectrais × informacionais</td><td>Esquema de setas muitos-para-um e um-para-muitos (floresta iluminada/sombreada; solo/telhado)</td></tr>
+        <tr><td>8</td><td>Pixel × objeto</td><td>Mesmo recorte classificado por pixel (sal e pimenta) e por objeto</td></tr>
+        <tr><td>9</td><td>Segmentação multirresolução</td><td>Três segmentações com parâmetros de escala crescentes, mostrando sobre e subsegmentação</td></tr>
+        <tr><td>10</td><td>K-Means</td><td>Sequência de quatro quadros: centros iniciais, atribuição, recentragem, convergência</td></tr>
+        <tr><td>11</td><td>ISODATA</td><td>Fluxograma com as decisões de divisão e fusão</td></tr>
+        <tr><td>12</td><td>MaxVer</td><td>Elipses de probabilidade (1σ, 2σ) e superfície gaussiana em 3D; fronteira quadrática</td></tr>
+        <tr><td>13</td><td>CART</td><td>Árvore de profundidade 3 ao lado da partição retangular correspondente no espaço de atributos</td></tr>
+        <tr><td>14</td><td>Random Forest</td><td>Três árvores, cada uma com seu voto, e o gráfico de importância das variáveis</td></tr>
+        <tr><td>15</td><td>SVM</td><td>Hiperplano, margem e vetores de suporte; projeção por núcleo de 2D para 3D</td></tr>
+        <tr><td>16</td><td>Deep learning</td><td>Arquitetura U-Net em forma de “U” com as conexões entre codificador e decodificador</td></tr>
+        <tr><td>17</td><td>Quadro comparativo</td><td>Tabela da seção 1.4 com destaque para fronteira, amostras e interpretabilidade</td></tr>
+        <tr><td>18</td><td>Pós-classificação</td><td>Antes e depois do filtro de maioria 3 × 3, com um rio estreito parcialmente apagado</td></tr>
+        <tr><td>19</td><td>Amostragem de validação</td><td>Mapa com pontos estratificados; contraste com pontos retirados dos polígonos de treino</td></tr>
+        <tr><td>20</td><td>Matriz de confusão</td><td>Matriz simulada com diagonal destacada e setas indicando leitura por linha (usuário) e por coluna (produtor)</td></tr>
+        <tr><td>21</td><td>Crítica ao kappa</td><td>Dois mapas com mesma exatidão global e kappas diferentes; barras de Q e A</td></tr>
+        <tr><td>22</td><td>Demonstração: espaço espectral</td><td>Capturas das grades classificadas por K-Means, Mahalanobis e Random Forest</td></tr>
+        <tr><td>23</td><td>Demonstração: engenharia de atributos</td><td>Tela dividida modelo A × modelo B sobre as encostas dos cânions</td></tr>
+        <tr><td>24</td><td>Síntese e referências</td><td>Fluxo completo de trabalho e lista de referências</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ================= REFERÊNCIAS ================= -->
+<section class="step" id="referencias">
+  <div class="step-head"><span class="step-n" style="font-size:2.2rem">§</span><div><p class="eyebrow">ABNT NBR 6023</p><h2>Referências</h2></div></div>
+  <div class="refs">
+    <p>BAATZ, M.; SCHÄPE, A. Multiresolution segmentation: an optimization approach for high quality multi-scale image segmentation. <em>In</em>: STROBL, J.; BLASCHKE, T.; GRIESEBNER, G. (ed.). <strong>Angewandte Geographische Informationsverarbeitung XII</strong>. Karlsruhe: Wichmann, 2000. p. 12-23.</p>
+    <p>BALL, G. H.; HALL, D. J. <strong>ISODATA, a novel method of data analysis and pattern classification</strong>. Menlo Park: Stanford Research Institute, 1965. Relatório técnico.</p>
+    <p>BELGIU, M.; DRĂGUŢ, L. Random forest in remote sensing: a review of applications and future directions. <strong>ISPRS Journal of Photogrammetry and Remote Sensing</strong>, v. 114, p. 24-31, 2016. DOI: 10.1016/j.isprsjprs.2016.01.011.</p>
+    <p>BLASCHKE, T. Object based image analysis for remote sensing. <strong>ISPRS Journal of Photogrammetry and Remote Sensing</strong>, v. 65, n. 1, p. 2-16, 2010. DOI: 10.1016/j.isprsjprs.2009.06.004.</p>
+    <p>BLASCHKE, T. <em>et al</em>. Geographic object-based image analysis: towards a new paradigm. <strong>ISPRS Journal of Photogrammetry and Remote Sensing</strong>, v. 87, p. 180-191, 2014. DOI: 10.1016/j.isprsjprs.2013.09.014.</p>
+    <p>BREIMAN, L. Random forests. <strong>Machine Learning</strong>, v. 45, n. 1, p. 5-32, 2001. DOI: 10.1023/A:1010933404324.</p>
+    <p>BREIMAN, L. <em>et al</em>. <strong>Classification and regression trees</strong>. Belmont: Wadsworth, 1984.</p>
+    <p>COHEN, J. A coefficient of agreement for nominal scales. <strong>Educational and Psychological Measurement</strong>, v. 20, n. 1, p. 37-46, 1960. DOI: 10.1177/001316446002000104.</p>
+    <p>CONGALTON, R. G. A review of assessing the accuracy of classifications of remotely sensed data. <strong>Remote Sensing of Environment</strong>, v. 37, n. 1, p. 35-46, 1991. DOI: 10.1016/0034-4257(91)90048-B.</p>
+    <p>CONGALTON, R. G.; GREEN, K. <strong>Assessing the accuracy of remotely sensed data</strong>: principles and practices. 3. ed. Boca Raton: CRC Press, 2019.</p>
+    <p>CORTES, C.; VAPNIK, V. Support-vector networks. <strong>Machine Learning</strong>, v. 20, n. 3, p. 273-297, 1995. DOI: 10.1007/BF00994018.</p>
+    <p>DRUSCH, M. <em>et al</em>. Sentinel-2: ESA’s optical high-resolution mission for GMES operational services. <strong>Remote Sensing of Environment</strong>, v. 120, p. 25-36, 2012. DOI: 10.1016/j.rse.2011.11.026.</p>
+    <p>FOODY, G. M. Explaining the unsuitability of the kappa coefficient in the assessment and comparison of the accuracy of thematic maps obtained by image classification. <strong>Remote Sensing of Environment</strong>, v. 239, 111630, 2020. DOI: 10.1016/j.rse.2019.111630.</p>
+    <p>GORELICK, N. <em>et al</em>. Google Earth Engine: planetary-scale geospatial analysis for everyone. <strong>Remote Sensing of Environment</strong>, v. 202, p. 18-27, 2017. DOI: 10.1016/j.rse.2017.06.031.</p>
+    <p>HARALICK, R. M.; SHANMUGAM, K.; DINSTEIN, I. Textural features for image classification. <strong>IEEE Transactions on Systems, Man, and Cybernetics</strong>, v. SMC-3, n. 6, p. 610-621, 1973. DOI: 10.1109/TSMC.1973.4309314.</p>
+    <p>HAY, G. J.; CASTILLA, G. Geographic object-based image analysis (GEOBIA): a new name for a new discipline. <em>In</em>: BLASCHKE, T.; LANG, S.; HAY, G. J. (ed.). <strong>Object-based image analysis</strong>: spatial concepts for knowledge-driven remote sensing applications. Berlin: Springer, 2008. p. 75-89.</p>
+    <p>HUGHES, G. F. On the mean accuracy of statistical pattern recognizers. <strong>IEEE Transactions on Information Theory</strong>, v. 14, n. 1, p. 55-63, 1968. DOI: 10.1109/TIT.1968.1054102.</p>
+    <p>JENSEN, J. R. <strong>Introductory digital image processing</strong>: a remote sensing perspective. 4. ed. Glenview: Pearson Education, 2016.</p>
+    <p>KARASIAK, N. <strong>Dzetsaka Qgis Classification plugin</strong>. [<em>S. l.</em>]: Zenodo, 2016. DOI: 10.5281/zenodo.2552284. Disponível em: https://github.com/nkarasiak/dzetsaka. Acesso em: 16 nov. 2026.</p>
+    <p>LECUN, Y.; BENGIO, Y.; HINTON, G. Deep learning. <strong>Nature</strong>, v. 521, n. 7553, p. 436-444, 2015. DOI: 10.1038/nature14539.</p>
+    <p>LILLESAND, T. M.; KIEFER, R. W.; CHIPMAN, J. W. <strong>Remote sensing and image interpretation</strong>. 7. ed. Hoboken: Wiley, 2015.</p>
+    <p>LLOYD, S. P. Least squares quantization in PCM. <strong>IEEE Transactions on Information Theory</strong>, v. 28, n. 2, p. 129-137, 1982. DOI: 10.1109/TIT.1982.1056489.</p>
+    <p>MA, L. <em>et al</em>. Deep learning in remote sensing applications: a meta-analysis and review. <strong>ISPRS Journal of Photogrammetry and Remote Sensing</strong>, v. 152, p. 166-177, 2019. DOI: 10.1016/j.isprsjprs.2019.04.015.</p>
+    <p>MACQUEEN, J. Some methods for classification and analysis of multivariate observations. <em>In</em>: BERKELEY SYMPOSIUM ON MATHEMATICAL STATISTICS AND PROBABILITY, 5., 1967, Berkeley. <strong>Proceedings</strong> [...]. Berkeley: University of California Press, 1967. v. 1, p. 281-297.</p>
+    <p>MAXWELL, A. E.; WARNER, T. A.; FANG, F. Implementation of machine-learning classification in remote sensing: an applied review. <strong>International Journal of Remote Sensing</strong>, v. 39, n. 9, p. 2784-2817, 2018. DOI: 10.1080/01431161.2018.1433343.</p>
+    <p>MCFEETERS, S. K. The use of the Normalized Difference Water Index (NDWI) in the delineation of open water features. <strong>International Journal of Remote Sensing</strong>, v. 17, n. 7, p. 1425-1432, 1996.</p>
+    <p>MENESES, P. R.; ALMEIDA, T. de (org.). <strong>Introdução ao processamento de imagens de sensoriamento remoto</strong>. Brasília: UnB; CNPq, 2012.</p>
+    <p>MOUNTRAKIS, G.; IM, J.; OGOLE, C. Support vector machines in remote sensing: a review. <strong>ISPRS Journal of Photogrammetry and Remote Sensing</strong>, v. 66, n. 3, p. 247-259, 2011. DOI: 10.1016/j.isprsjprs.2010.11.001.</p>
+    <p>NOVO, E. M. L. M. <strong>Sensoriamento remoto</strong>: princípios e aplicações. 4. ed. São Paulo: Blucher, 2010.</p>
+    <p>OLOFSSON, P. <em>et al</em>. Good practices for estimating area and assessing accuracy of land change. <strong>Remote Sensing of Environment</strong>, v. 148, p. 42-57, 2014. DOI: 10.1016/j.rse.2014.02.015.</p>
+    <p>PONTIUS JR., R. G.; MILLONES, M. Death to Kappa: birth of quantity disagreement and allocation disagreement for accuracy assessment. <strong>International Journal of Remote Sensing</strong>, v. 32, n. 15, p. 4407-4429, 2011. DOI: 10.1080/01431161.2011.552923.</p>
+    <p>RICHARDS, J. A. <strong>Remote sensing digital image analysis</strong>. 6. ed. Cham: Springer, 2022.</p>
+    <p>RONNEBERGER, O.; FISCHER, P.; BROX, T. U-Net: convolutional networks for biomedical image segmentation. <em>In</em>: NAVAB, N. <em>et al</em>. (ed.). <strong>Medical Image Computing and Computer-Assisted Intervention – MICCAI 2015</strong>. Cham: Springer, 2015. p. 234-241. (Lecture Notes in Computer Science, v. 9351). DOI: 10.1007/978-3-319-24574-4_28.</p>
+    <p>ROUSE, J. W. <em>et al</em>. Monitoring vegetation systems in the Great Plains with ERTS. <em>In</em>: EARTH RESOURCES TECHNOLOGY SATELLITE-1 SYMPOSIUM, 3. <strong>Proceedings</strong> [...]. Washington, DC: NASA, 1974. v. 1, p. 309-317. (NASA SP-351). <span class="pend">[Conferir local e data do evento]</span></p>
+    <p>STEHMAN, S. V.; FOODY, G. M. Key issues in rigorous accuracy assessment of land cover products. <strong>Remote Sensing of Environment</strong>, v. 231, 111199, 2019. DOI: 10.1016/j.rse.2019.05.018.</p>
+    <p>TOU, J. T.; GONZALEZ, R. C. <strong>Pattern recognition principles</strong>. Reading: Addison-Wesley, 1974.</p>
+    <p>XU, H. Modification of normalised difference water index (NDWI) to enhance open water features in remotely sensed imagery. <strong>International Journal of Remote Sensing</strong>, v. 27, n. 14, p. 3025-3033, 2006. DOI: 10.1080/01431160600589179.</p>
+    <p>ZHA, Y.; GAO, J.; NI, S. Use of normalized difference built-up index in automatically mapping urban areas from TM imagery. <strong>International Journal of Remote Sensing</strong>, v. 24, n. 3, p. 583-594, 2003.</p>
+    <p>ZHU, X. X. <em>et al</em>. Deep learning in remote sensing: a comprehensive review and list of resources. <strong>IEEE Geoscience and Remote Sensing Magazine</strong>, v. 5, n. 4, p. 8-36, 2017. DOI: 10.1109/MGRS.2017.2762307.</p>
+  </div>
+  <p class="note" style="margin-top:14px">Dados bibliográficos conferidos em catálogos de bibliotecas, registros DOI e páginas das editoras em 16 nov. 2026. Pendências sinalizadas com [Conferir]: local e data do simpósio de Rouse et al. (1974), página da recomendação de tamanho amostral em Richards (2022) e coordenadas da área de exemplo. Para Meneses e Almeida (2012), recomenda-se confirmar na folha de rosto a lista completa de autores dos capítulos.</p>
+</section>
+</main>
+
+<footer><div class="wrap">Material da aula “Classificação Digital de Imagens de Sensoriamento Remoto”, Prof. Hatan Pinheiro. Matriz de confusão e coordenadas do exemplo são ilustrativas.</div></footer>
+</body>
+</html>

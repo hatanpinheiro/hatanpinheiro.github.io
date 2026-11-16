@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,500..800&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
 <link rel="stylesheet" href="comum.css">
 <style>
-.days-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding-block:36px 12px}
+.days-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;padding-block:36px 12px}
 .day{background:var(--surface);border:1px solid var(--line);border-radius:12px;display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;min-width:0}
 .day-head{background:var(--accent);color:var(--accent-ink);padding:18px 22px;display:grid;gap:4px}
 .day-head .eyebrow{color:inherit;opacity:.85}
@@ -38,6 +38,7 @@
     <a href="fundamentos/"><b>Dia 1</b>Fundamentos</a>
     <a href="classificacao/"><b>Dia 2</b>Classificação</a>
     <a href="mapa-tematico/"><b>Dia 3</b>Mapa temático</a>
+    <a href="classificacao-digital/"><b>Dia 4</b>Classificação avançada</a>
   </nav>
   <button class="theme-btn" type="button" data-theme-toggle aria-pressed="false">Modo escuro</button>
 </div></div>
@@ -46,7 +47,7 @@
   <div class="wrap">
     <p class="eyebrow">Disciplina de Sensoriamento Remoto · Graduação · Prof. Hatan Pinheiro</p>
     <h1 style="margin-top:10px">Aulas de Sensoriamento Remoto</h1>
-    <p class="lead" style="max-width:62ch">Material interativo organizado por dia de aula. O primeiro dia apresenta os fundamentos físicos e o cálculo do NDVI; o segundo, a classificação de imagens e a avaliação da acurácia; o terceiro, a produção do mapa temático no QGIS.</p>
+    <p class="lead" style="max-width:62ch">Material interativo organizado por dia de aula. O primeiro dia apresenta os fundamentos físicos e o cálculo do NDVI; o segundo, a classificação de imagens e a avaliação da acurácia; o terceiro, a produção do mapa temático no QGIS; o quarto aprofunda a classificação digital para a pós-graduação.</p>
   </div>
 </header>
 
@@ -112,19 +113,35 @@
         <a class="btn" href="mapa-tematico/slides/Aula3_Mapa_Tematico.pptx">Slides (PPTX)</a>
       </div>
     </article>
+    <article class="day">
+      <div class="day-head">
+        <span class="eyebrow">Dia 4 · graduação avançada e pós-graduação</span>
+        <h2>Classificação Digital de Imagens</h2>
+        <p>Fundamentos matemáticos dos classificadores, avaliação rigorosa da acurácia e demonstração no Earth Engine e no QGIS.</p>
+      </div>
+      <ol>
+        <li><a href="classificacao-digital/#espaco"><span class="n">1</span><span>Espaço de atributos<small>Mahalanobis, Jeffries-Matusita, Hughes, classes espectrais e informacionais</small></span></a></li>
+        <li><a href="classificacao-digital/#unidade"><span class="n">2</span><span>Pixel ou objeto<small>GEOBIA e segmentação multirresolução</small></span></a></li>
+        <li><a href="classificacao-digital/#naosup"><span class="n">3</span><span>Não supervisionados<small>K-Means e ISODATA</small></span></a></li>
+        <li><a href="classificacao-digital/#sup"><span class="n">4</span><span>Supervisionados<small>MaxVer, CART, Random Forest, SVM e CNN</small></span></a></li>
+        <li><a href="classificacao-digital/#acuracia"><span class="n">5</span><span>Acurácia<small>Amostragem, matriz, crítica ao kappa, quantidade e alocação</small></span></a></li>
+        <li><a href="classificacao-digital/#pratica"><span class="n">6</span><span>Demonstração prática<small>Earth Engine e QGIS com Sentinel-2</small></span></a></li>
+      </ol>
+      <div class="day-foot"><a class="btn primary" href="classificacao-digital/">Abrir o Dia 4</a></div>
+    </article>
   </div>
 
   <section class="themes">
     <h2 style="font-size:1.4rem;margin-bottom:12px">Temas por dia</h2>
     <div class="table-scroll"><table>
-      <thead><tr><th>Tema</th><th>Dia 1 · Fundamentos</th><th>Dia 2 · Classificação</th><th>Dia 3 · Mapa temático</th></tr></thead>
+      <thead><tr><th>Tema</th><th>Dia 1 · Fundamentos</th><th>Dia 2 · Classificação</th><th>Dia 3 · Mapa temático</th><th>Dia 4 · Classificação avançada</th></tr></thead>
       <tbody>
-        <tr><td>Conceitos</td><td><a href="fundamentos/#conceito">Definição e componentes do sistema</a></td><td><a href="classificacao/#mapa">Classificação e mapa temático</a></td><td><a href="mapa-tematico/#dado">Do dado ao mapa</a></td></tr>
-        <tr><td>Física e dados</td><td><a href="fundamentos/#radiacao">Espectro</a> · <a href="fundamentos/#atmosfera">Atmosfera</a></td><td><a href="classificacao/#atributos">Espaço de atributos</a></td><td><a href="mapa-tematico/#projecao">SIRGAS 2000 e UTM</a></td></tr>
-        <tr><td>Alvos</td><td><a href="fundamentos/#alvos">Assinatura espectral</a></td><td><a href="classificacao/#atributos">Separabilidade entre classes</a></td><td><a href="mapa-tematico/#cores">Cores e legenda das classes</a></td></tr>
-        <tr><td>Métodos</td><td><a href="fundamentos/#sensores">Sensores e resoluções</a></td><td><a href="classificacao/#kmedias">K-médias</a> · <a href="classificacao/#supervisionada">Classificadores supervisionados</a> · <a href="classificacao/#objeto">GEOBIA</a></td><td><a href="mapa-tematico/#elementos">Elementos do mapa</a> · <a href="mapa-tematico/#generalizacao">Generalização</a></td></tr>
-        <tr><td>Qualidade</td><td><a href="fundamentos/#sensores">Pixel misto e resolução espacial</a></td><td><a href="classificacao/#acuracia">Matriz de confusão e índices</a></td><td><a href="mapa-tematico/#escala">PEC</a> · <a href="mapa-tematico/#metadados">Metadados</a></td></tr>
-        <tr><td>Prática no QGIS</td><td><a href="fundamentos/#pratica">Sentinel-2 e NDVI</a></td><td><a href="classificacao/#pratica">Classificação com o dzetsaka</a></td><td><a href="mapa-tematico/#pratica">Layout e exportação</a></td></tr>
+        <tr><td>Conceitos</td><td><a href="fundamentos/#conceito">Definição e componentes do sistema</a></td><td><a href="classificacao/#mapa">Classificação e mapa temático</a></td><td><a href="mapa-tematico/#dado">Do dado ao mapa</a></td><td><a href="classificacao-digital/#espaco">Espaço de atributos n-dimensional</a></td></tr>
+        <tr><td>Física e dados</td><td><a href="fundamentos/#radiacao">Espectro</a> · <a href="fundamentos/#atmosfera">Atmosfera</a></td><td><a href="classificacao/#atributos">Espaço de atributos</a></td><td><a href="mapa-tematico/#projecao">SIRGAS 2000 e UTM</a></td><td><a href="classificacao-digital/#pratica">Composição Sentinel-2 no Earth Engine</a></td></tr>
+        <tr><td>Alvos</td><td><a href="fundamentos/#alvos">Assinatura espectral</a></td><td><a href="classificacao/#atributos">Separabilidade entre classes</a></td><td><a href="mapa-tematico/#cores">Cores e legenda das classes</a></td><td><a href="classificacao-digital/#espaco">Classes espectrais e informacionais</a></td></tr>
+        <tr><td>Métodos</td><td><a href="fundamentos/#sensores">Sensores e resoluções</a></td><td><a href="classificacao/#kmedias">K-médias</a> · <a href="classificacao/#supervisionada">Classificadores supervisionados</a> · <a href="classificacao/#objeto">GEOBIA</a></td><td><a href="mapa-tematico/#elementos">Elementos do mapa</a> · <a href="mapa-tematico/#generalizacao">Generalização</a></td><td><a href="classificacao-digital/#naosup">K-Means e ISODATA</a> · <a href="classificacao-digital/#sup">MaxVer, CART, RF, SVM</a></td></tr>
+        <tr><td>Qualidade</td><td><a href="fundamentos/#sensores">Pixel misto e resolução espacial</a></td><td><a href="classificacao/#acuracia">Matriz de confusão e índices</a></td><td><a href="mapa-tematico/#escala">PEC</a> · <a href="mapa-tematico/#metadados">Metadados</a></td><td><a href="classificacao-digital/#acuracia">Quantidade e alocação</a></td></tr>
+        <tr><td>Prática</td><td><a href="fundamentos/#pratica">Sentinel-2 e NDVI</a></td><td><a href="classificacao/#pratica">Classificação com o dzetsaka</a></td><td><a href="mapa-tematico/#pratica">Layout e exportação</a></td><td><a href="classificacao-digital/#pratica">Earth Engine e QGIS</a></td></tr>
       </tbody>
     </table></div>
   </section>
