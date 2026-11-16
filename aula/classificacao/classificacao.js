@@ -515,14 +515,14 @@ function checklist(listId, barId, key) {
 checklist('ck-a', 'pg-a', 'sr2-ck-a'); checklist('ck-b', 'pg-b', 'sr2-ck-b'); checklist('ck-c', 'pg-c', 'sr2-ck-c');
 (function () {
   var Q = [
-    { s: 'Slide 19', q: 'Por que solo exposto e área construída se confundem? Que bandas ajudam a separá-los?', l: [['#atributos', '2. Espaço de atributos'], ['#supervisionada', '4. 2 × 5 bandas']] },
-    { s: 'Slide 19', q: 'Quando a classificação não supervisionada é preferível à supervisionada?', l: [['#kmedias', '3. K-médias']] },
-    { s: 'Slide 19', q: 'Por que a máxima verossimilhança exige um número mínimo de amostras por classe?', l: [['#supervisionada', '4. Laboratório (3 amostras por classe)']] },
-    { s: 'Slide 19', q: 'Como o pixel misto afeta a acurácia em resoluções de 10 m e de 30 m?', l: [['#mapa', '1. Pixel misto'], ['#acuracia', '6. Matriz de confusão']] },
-    { s: 'Slide 23', q: 'Quais classes apresentaram maior omissão e maior comissão? Por quê?', l: [['#acuracia', '6. Produtor e usuário']] },
-    { s: 'Slide 23', q: 'O resultado mudou entre GMM e Random Forest?', l: [['#supervisionada', '4. Máxima verossimilhança × Random Forest']] },
-    { s: 'Slide 23', q: 'O mapa de confiança coincide com as áreas de erro?', l: [['#supervisionada', '4. Acertos e erros']] },
-    { s: 'Slide 23', q: 'Como a data da imagem influencia a confusão entre classes?', l: [['#atributos', '2. Separabilidade']] }];
+    { s: 'Slide 24', q: 'Por que solo exposto e área construída se confundem? Que bandas ajudam a separá-los?', l: [['#atributos', '2. Espaço de atributos'], ['#supervisionada', '4. 2 × 5 bandas']] },
+    { s: 'Slide 24', q: 'Quando a classificação não supervisionada é preferível à supervisionada?', l: [['#kmedias', '3. K-médias']] },
+    { s: 'Slide 24', q: 'Por que a máxima verossimilhança exige um número mínimo de amostras por classe?', l: [['#supervisionada', '4. Laboratório (3 amostras por classe)']] },
+    { s: 'Slide 24', q: 'Como o pixel misto afeta a acurácia em resoluções de 10 m e de 30 m?', l: [['#mapa', '1. Pixel misto'], ['#acuracia', '6. Matriz de confusão']] },
+    { s: 'Slide 28', q: 'Quais classes apresentaram maior omissão e maior comissão? Por quê?', l: [['#acuracia', '6. Produtor e usuário']] },
+    { s: 'Slide 28', q: 'O resultado mudou entre GMM e Random Forest?', l: [['#supervisionada', '4. Máxima verossimilhança × Random Forest']] },
+    { s: 'Slide 28', q: 'O mapa de confiança coincide com as áreas de erro?', l: [['#supervisionada', '4. Acertos e erros']] },
+    { s: 'Slide 28', q: 'Como a data da imagem influencia a confusão entre classes?', l: [['#atributos', '2. Separabilidade']] }];
   var notes = store.get('sr2-notes', {}), box = $('qs');
   Q.forEach(function (q, i) {
     var d = document.createElement('div'); d.className = 'q';
@@ -536,7 +536,234 @@ checklist('ck-a', 'pg-a', 'sr2-ck-a'); checklist('ck-b', 'pg-b', 'sr2-ck-b'); ch
   var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { links.forEach(function (a) { a.classList.remove('on'); }); var a = map[e.target.id]; if (a) { a.classList.add('on'); try { a.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (_) { } } } }); }, { rootMargin: '-45% 0px -50% 0px' });
   document.querySelectorAll('main .step').forEach(function (s) { io.observe(s); });
 })();
-document.addEventListener('sr-theme', function () { plotSpace.render(); plotKm.render(); plotSup.render(); });
+document.addEventListener('sr-theme', function () { plotSpace.render(); plotKm.render(); plotSup.render(); ANIM.render(); });
+
+/* =========================================================
+   4a. Animação passo a passo dos classificadores (B04 × B08)
+   ========================================================= */
+var ANIM = (function () {
+  var BX = 2, BY = 3, K_PP = 2, K_NN = 5;
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var rr = mulberry(99), TS = [];
+  PURE_BY.forEach(function (list, c) { for (var k = 0; k < 10; k++) { var p = list[Math.floor(rr() * list.length)]; TS.push({ x: X[p * NB + BX], y: X[p * NB + BY], c: c }); } });
+  /* Estatísticas por classe */
+  var ST = CL.map(function (_, c) {
+    var P = TS.filter(function (q) { return q.c === c; }), n = P.length, mx = 0, my = 0;
+    P.forEach(function (q) { mx += q.x / n; my += q.y / n; });
+    var a = 0, b = 0, d = 0; P.forEach(function (q) { var dx = q.x - mx, dy = q.y - my; a += dx * dx; b += dx * dy; d += dy * dy; });
+    a = a / (n - 1) + .05; b = b / (n - 1); d = d / (n - 1) + .05;
+    var det = a * d - b * b, l11 = Math.sqrt(a), l21 = b / l11, l22 = Math.sqrt(Math.max(1e-6, d - l21 * l21));
+    return { mx: mx, my: my, sx: Math.sqrt(a), sy: Math.sqrt(d), ia: d / det, ib: -b / det, id: a / det, det: det, L: [l11, l21, l22] };
+  });
+  function maha(c, x, y) { var s = ST[c], dx = x - s.mx, dy = y - s.my; return Math.sqrt(s.ia * dx * dx + 2 * s.ib * dx * dy + s.id * dy * dy); }
+  function eucl(c, x, y) { var s = ST[c]; return Math.hypot(x - s.mx, y - s.my); }
+  /* Regras de decisão */
+  function mdPred(x, y) { var b = 0; for (var c = 1; c < NC; c++) if (eucl(c, x, y) < eucl(b, x, y)) b = c; return b; }
+  function ppInfo(x, y) { var r = CL.map(function (_, c) { var s = ST[c]; return { ix: Math.abs(x - s.mx) <= K_PP * s.sx, iy: Math.abs(y - s.my) <= K_PP * s.sy }; }); var cand = []; r.forEach(function (q, c) { if (q.ix && q.iy) cand.push(c); }); var res = -1; cand.forEach(function (c) { if (res < 0 || eucl(c, x, y) < eucl(res, x, y)) res = c; }); return { r: r, cand: cand, res: res }; }
+  function mlLik(x, y) { var L = CL.map(function (_, c) { var m = maha(c, x, y); return Math.exp(-0.5 * m * m) / (2 * Math.PI * Math.sqrt(ST[c].det)); }), s = L.reduce(function (a, b) { return a + b; }, 0) || 1e-300; return L.map(function (v) { return v / s; }); }
+  function mlPred(x, y) { var p = mlLik(x, y), b = 0; for (var c = 1; c < NC; c++) if (p[c] > p[b]) b = c; return b; }
+  function knnInfo(x, y) { var d = TS.map(function (q, i) { return { i: i, d: Math.hypot(q.x - x, q.y - y) }; }).sort(function (a, b) { return a.d - b.d; }); var nb = d.slice(0, K_NN), v = [0, 0, 0, 0, 0]; nb.forEach(function (q) { v[TS[q.i].c]++; }); var b = 0; for (var c = 1; c < NC; c++) if (v[c] > v[b]) b = c; return { nb: nb, votes: v, res: b, R: nb[K_NN - 1].d }; }
+  /* Árvores pequenas (profundidade 3) para a floresta ilustrativa */
+  function gini(cnt, n) { var g = 1; cnt.forEach(function (v) { var p = v / n; g -= p * p; }); return g; }
+  function grow(ids, depth, box, r, pos) {
+    var cnt = [0, 0, 0, 0, 0]; ids.forEach(function (i) { cnt[TS[i].c]++; }); var maj = cnt.indexOf(Math.max.apply(null, cnt));
+    var node = { box: box, pos: pos, depth: depth, cls: maj };
+    if (depth >= 3 || cnt[maj] === ids.length || ids.length < 4) { node.leaf = true; return node; }
+    var f = r() < 0.5 ? 0 : 1, key = f ? 'y' : 'x', vals = ids.map(function (i) { return TS[i][key]; }).sort(function (a, b) { return a - b; }), best = null;
+    for (var k = 1; k < vals.length; k++) { if (vals[k] === vals[k - 1]) continue; var t = (vals[k] + vals[k - 1]) / 2, L = [0, 0, 0, 0, 0], R = [0, 0, 0, 0, 0], nl = 0; ids.forEach(function (i) { if (TS[i][key] <= t) { L[TS[i].c]++; nl++; } else R[TS[i].c]++; }); var nr = ids.length - nl, g = (nl * gini(L, nl) + nr * gini(R, nr)) / ids.length; if (!best || g < best.g) best = { g: g, t: t }; }
+    if (!best) { node.leaf = true; return node; }
+    node.f = f; node.t = best.t;
+    var bl = box.slice(), br = box.slice(); if (f === 0) { bl[1] = best.t; br[0] = best.t; } else { bl[3] = best.t; br[2] = best.t; }
+    node.l = grow(ids.filter(function (i) { return TS[i][key] <= best.t; }), depth + 1, bl, r, pos * 2);
+    node.r = grow(ids.filter(function (i) { return TS[i][key] > best.t; }), depth + 1, br, r, pos * 2 + 1);
+    return node;
+  }
+  var TREES = [11, 23, 37].map(function (seed) { var r = mulberry(seed), boot = []; for (var i = 0; i < TS.length; i++) boot.push(Math.floor(r() * TS.length)); return grow(boot, 0, [0, BMAX[BX], 0, BMAX[BY]], r, 0); });
+  function path(tree, x, y) { var n = tree, p = [n]; while (!n.leaf) { n = (n.f === 0 ? x : y) <= n.t ? n.l : n.r; p.push(n); } return p; }
+  function leaves(n, out) { out = out || []; if (n.leaf) out.push(n); else { leaves(n.l, out); leaves(n.r, out); } return out; }
+  function rfVotes(x, y) { var v = [0, 0, 0, 0, 0]; TREES.forEach(function (t) { var p = path(t, x, y); v[p[p.length - 1].cls]++; }); return v; }
+  function rfPred(x, y) { var v = rfVotes(x, y), b = 0; for (var c = 1; c < NC; c++) if (v[c] > v[b]) b = c; return b; }
+  function knnPred(x, y) { return knnInfo(x, y).res; }
+  /* Imagens de regiões (cache) */
+  var REG = {};
+  function regions(m) {
+    if (REG[m]) return REG[m];
+    var G = 90, cv = document.createElement('canvas'); cv.width = G; cv.height = G; var ctx = cv.getContext('2d'), im = ctx.createImageData(G, G);
+    var fn = { md: mdPred, pp: function (x, y) { return ppInfo(x, y).res; }, ml: mlPred, knn: knnPred, rf: rfPred }[m];
+    for (var j = 0; j < G; j++) for (var i = 0; i < G; i++) { var x = (i + .5) / G * BMAX[BX], y = (G - j - .5) / G * BMAX[BY], c = fn(x, y), q = (j * G + i) * 4; if (c < 0) continue; im.data[q] = CRGB[c][0]; im.data[q + 1] = CRGB[c][1]; im.data[q + 2] = CRGB[c][2]; im.data[q + 3] = 110; }
+    ctx.putImageData(im, 0, 0); REG[m] = cv; return cv;
+  }
+  /* Estado */
+  var EX = { amb: [21.5, 26.5], misto: [5.2, 15], tip: [3.8, 44] };
+  var st = { m: 'md', step: 0, t: 1, x: EX.amb[0], y: EX.amb[1], playing: false, timer: null, raf: null };
+  function name(c) { return c < 0 ? 'Não classificado' : CL[c].n; }
+  function bars(rows, fmt, win, maxv, dim) {
+    return '<div class="abars">' + rows.map(function (v, c) { var w = Math.max(0, Math.min(100, v / (maxv || 1) * 100)); return '<div class="r' + (c === win ? ' win' : '') + (dim && dim(c) ? ' dim' : '') + '"><span>' + CL[c].n + '</span><span class="track"><span class="fill" style="display:block;width:' + w + '%;background:' + CL[c].c + '"></span></span><span class="v">' + fmt(v) + '</span></div>'; }).join('') + '</div>';
+  }
+  /* Definição dos passos de cada método */
+  var M = {
+    md: { side: 'Distância euclidiana às médias', note: 'A distância é medida em unidades de reflectância, igual em todas as direções: a dispersão de cada classe é ignorada.', steps: [
+      function () { return 'Amostras de treinamento de cada classe no espaço de atributos (B04 × B08).'; },
+      function () { return 'Calcula-se a média de cada classe (×): ela resume a classe em um único ponto.'; },
+      function () { return 'Um pixel desconhecido (○) entra no espaço de atributos.'; },
+      function () { return 'Mede-se a distância do pixel até cada média.'; },
+      function () { var c = mdPred(st.x, st.y); return 'O pixel é atribuído à classe de menor distância: <strong>' + name(c) + '</strong> (' + nf(eucl(c, st.x, st.y), 1) + ').'; },
+      function () { return 'Repetindo a regra para todos os pontos do espaço, obtêm-se as regiões de decisão: fronteiras retas, a meio caminho entre as médias.'; }] },
+    pp: { side: 'Dentro do intervalo μ ± 2σ?', note: 'Pixels fora de todas as caixas ficam sem classe; caixas sobrepostas exigem uma regra de desempate (aqui, a menor distância à média).', steps: [
+      function () { return 'Amostras de treinamento de cada classe.'; },
+      function () { return 'Para cada classe e cada banda, define-se o intervalo média ± 2 desvios-padrão (barras junto aos eixos).'; },
+      function () { return 'O cruzamento dos dois intervalos forma uma caixa (paralelepípedo) por classe.'; },
+      function () { return 'Um pixel desconhecido entra; suas projeções indicam o valor em cada banda.'; },
+      function () { var I = ppInfo(st.x, st.y); return 'Verifica-se, banda a banda, se o pixel está dentro de cada caixa: ' + (I.cand.length ? 'dentro de ' + I.cand.map(name).join(' e ') : 'fora de todas as caixas') + '.'; },
+      function () { var I = ppInfo(st.x, st.y); return I.cand.length === 0 ? 'Fora de todas as caixas: o pixel fica <strong>não classificado</strong>.' : I.cand.length === 1 ? 'Dentro de uma única caixa: <strong>' + name(I.res) + '</strong>.' : 'Caixas sobrepostas (' + I.cand.map(name).join(', ') + '): desempate pela menor distância à média, <strong>' + name(I.res) + '</strong>.'; },
+      function () { return 'Regiões de decisão: retângulos; as áreas em branco não pertencem a nenhuma classe.'; }] },
+    ml: { side: 'Probabilidade relativa de pertencer à classe', note: 'Verossimilhança gaussiana com probabilidades a priori iguais, normalizada para somar 100%. É o princípio do GMM do dzetsaka.', steps: [
+      function () { return 'Amostras de treinamento de cada classe.'; },
+      function () { return 'Para cada classe estimam-se média e covariância. As elipses (1σ e 2σ) mostram dispersão e orientação de cada nuvem.'; },
+      function () { return 'Um pixel desconhecido entra no espaço de atributos.'; },
+      function () { return 'Para cada classe, desenha-se a elipse que passa pelo pixel: quanto menor a elipse em relação à da classe, mais próximo o pixel está do centro dessa classe (distância de Mahalanobis).'; },
+      function () { var c = mlPred(st.x, st.y); return 'A densidade normal de cada classe no ponto é convertida em probabilidade relativa. Maior: <strong>' + name(c) + '</strong> (' + pct(mlLik(st.x, st.y)[c]) + ').'; },
+      function () { var c = mlPred(st.x, st.y), d = mdPred(st.x, st.y); return c === d ? 'Aqui a decisão coincide com a distância mínima (' + name(d) + '). Clique entre solo exposto e área construída para ver um caso em que diferem.' : 'A distância mínima escolheria <strong>' + name(d) + '</strong> (linha tracejada); a máxima verossimilhança escolhe <strong>' + name(c) + '</strong> porque considera a dispersão de cada classe.'; },
+      function () { return 'Regiões de decisão: fronteiras curvas que acompanham a forma das nuvens.'; }] },
+    knn: { side: 'Votos dos k = 5 vizinhos mais próximos', note: 'Na tela, o círculo aparece como elipse porque os eixos têm escalas diferentes; a distância é calculada nas unidades de reflectância.', steps: [
+      function () { return 'Amostras de treinamento: o k-NN não estima médias nem covariâncias, apenas guarda as amostras.'; },
+      function () { return 'Um pixel desconhecido entra no espaço de atributos.'; },
+      function () { return 'Um círculo cresce a partir do pixel até conter as k = 5 amostras mais próximas.'; },
+      function () { return 'Cada vizinho vota com a sua classe.'; },
+      function () { var I = knnInfo(st.x, st.y); return 'Classe mais votada: <strong>' + name(I.res) + '</strong> (' + I.votes[I.res] + ' de 5 votos).'; },
+      function () { return 'Regiões de decisão: fronteiras irregulares, que seguem as amostras individuais.'; }] },
+    rf: { side: 'Árvore em destaque e votação', note: 'Floresta ilustrativa com 3 árvores de profundidade 3. Na prática, usam-se dezenas a centenas de árvores (BREIMAN, 2001).', steps: [
+      function () { return 'Amostras de treinamento de cada classe.'; },
+      function () { return 'Árvore 1: treinada com uma reamostragem das amostras, divide o espaço com perguntas do tipo “banda ≤ limiar”, formando retângulos.'; },
+      function () { var p = path(TREES[0], st.x, st.y); return 'O pixel desce pela árvore 1, respondendo a cada pergunta, até uma folha: voto em <strong>' + name(p[p.length - 1].cls) + '</strong>.'; },
+      function () { var p = path(TREES[1], st.x, st.y); return 'Árvore 2: outra reamostragem e outras bandas sorteadas geram outra partição. Voto: <strong>' + name(p[p.length - 1].cls) + '</strong>.'; },
+      function () { var p = path(TREES[2], st.x, st.y); return 'Árvore 3: mais uma partição diferente. Voto: <strong>' + name(p[p.length - 1].cls) + '</strong>.'; },
+      function () { var v = rfVotes(st.x, st.y), c = rfPred(st.x, st.y); return 'Votação: a classe com mais votos é atribuída ao pixel, <strong>' + name(c) + '</strong> (' + v[c] + ' de 3).'; },
+      function () { return 'Regiões de decisão da floresta: segmentos paralelos aos eixos, combinados pela votação.'; }] }
+  };
+  /* Desenho */
+  var plot = new Plot($('sc-anim'), draw);
+  function ease(t) { return t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+  function xmark(ctx, x, y, s, col, w) { ctx.lineWidth = w + 3; ctx.strokeStyle = cssv('--surface'); ctx.beginPath(); ctx.moveTo(x - s, y - s); ctx.lineTo(x + s, y + s); ctx.moveTo(x + s, y - s); ctx.lineTo(x - s, y + s); ctx.stroke(); ctx.lineWidth = w; ctx.strokeStyle = col; ctx.stroke(); }
+  function ellipse(ctx, f, c, m, frac) { var s = ST[c], L = s.L; ctx.beginPath(); var n = 72, end = Math.max(1, Math.round(n * frac)); for (var k = 0; k <= end; k++) { var a = k / n * 2 * Math.PI, u = Math.cos(a), v = Math.sin(a), x = s.mx + m * L[0] * u, y = s.my + m * (L[1] * u + L[2] * v); if (k) ctx.lineTo(f.sx(x), f.sy(y)); else ctx.moveTo(f.sx(x), f.sy(y)); } ctx.stroke(); }
+  function draw(ctx, P) {
+    var f = P.frame(ctx, BX, BY), m = st.m, s = st.step, t = ease(st.t), ink = cssv('--ink'), x = st.x, y = st.y, px = f.sx(x), py = f.sy(y);
+    var testAt = { md: 2, pp: 3, ml: 2, knn: 1, rf: 2 }[m], regAt = M[m].steps.length - 1;
+    clipTo(ctx, f);
+    if (s >= regAt) { ctx.globalAlpha = s === regAt ? t : 1; ctx.imageSmoothingEnabled = false; ctx.drawImage(regions(m), f.x0, f.y0, f.pw, f.ph); ctx.globalAlpha = 1; }
+    /* Partições das árvores */
+    if (m === 'rf' && s >= 1 && s <= 5) {
+      var ti = s === 5 ? -1 : Math.min(2, Math.max(0, s - (s >= 2 ? 2 : 1)));
+      if (s === 1) ti = 0; if (s === 2) ti = 0; if (s === 3) ti = 1; if (s === 4) ti = 2;
+      if (ti >= 0) {
+        var a1 = (s === 1 || s === 3 || s === 4) ? t : 1;
+        leaves(TREES[ti]).forEach(function (lf) { var b = lf.box; ctx.globalAlpha = .22 * a1; ctx.fillStyle = CL[lf.cls].c; ctx.fillRect(f.sx(b[0]), f.sy(b[3]), f.sx(b[1]) - f.sx(b[0]), f.sy(b[2]) - f.sy(b[3])); ctx.globalAlpha = a1; ctx.strokeStyle = ink; ctx.lineWidth = 1.2; ctx.strokeRect(f.sx(b[0]), f.sy(b[3]), f.sx(b[1]) - f.sx(b[0]), f.sy(b[2]) - f.sy(b[3])); });
+        ctx.globalAlpha = 1;
+        if (s >= 2) { var pp = path(TREES[ti], x, y), lf = pp[pp.length - 1], b = lf.box, show = (s === 2 && st.t < 1) ? t : 1; ctx.globalAlpha = show; ctx.lineWidth = 3; ctx.strokeStyle = CL[lf.cls].c; ctx.strokeRect(f.sx(b[0]), f.sy(b[3]), f.sx(b[1]) - f.sx(b[0]), f.sy(b[2]) - f.sy(b[3])); ctx.globalAlpha = 1; }
+      }
+    }
+    /* Amostras */
+    var aS = s === 0 ? t : (m === 'rf' && s >= 1 && s <= 4 ? .7 : 1);
+    TS.forEach(function (q, i) {
+      var hl = false;
+      if (m === 'knn' && s >= 2 && s < regAt) { var I = knnInfo(x, y), R = I.R * 1.03 * (s === 2 ? t : 1); hl = Math.hypot(q.x - x, q.y - y) <= R && I.nb.some(function (n) { return n.i === i; }); }
+      ctx.globalAlpha = aS * (m === 'knn' && s >= 3 && s < regAt && !hl ? .35 : 1);
+      ctx.fillStyle = CL[q.c].c; ctx.strokeStyle = ink; ctx.lineWidth = hl ? 2.5 : .8;
+      ctx.beginPath(); ctx.arc(f.sx(q.x), f.sy(q.y), hl ? 6 : 4.2, 0, 6.2832); ctx.fill(); ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+    /* Médias, caixas, elipses */
+    if ((m === 'md' || m === 'ml') && s >= 1) {
+      CL.forEach(function (_, c) { var S_ = ST[c];
+        if (m === 'md' && s === 1) { ctx.globalAlpha = .35 * t; ctx.strokeStyle = CL[c].c; ctx.lineWidth = 1; TS.forEach(function (q) { if (q.c !== c) return; ctx.beginPath(); ctx.moveTo(f.sx(q.x), f.sy(q.y)); ctx.lineTo(f.sx(S_.mx), f.sy(S_.my)); ctx.stroke(); }); ctx.globalAlpha = 1; }
+        if (m === 'ml') { ctx.strokeStyle = CL[c].c; ctx.lineWidth = 2; ctx.setLineDash([]); ellipse(ctx, f, c, 1, s === 1 ? t : 1); ctx.setLineDash([5, 4]); ellipse(ctx, f, c, 2, s === 1 ? t : 1); ctx.setLineDash([]); }
+        xmark(ctx, f.sx(S_.mx), f.sy(S_.my), 7 * (s === 1 ? t : 1), CL[c].c, 3);
+      });
+    }
+    if (m === 'pp' && s >= 1) {
+      CL.forEach(function (_, c) { var S_ = ST[c], a = s === 1 ? t : 1, x0 = S_.mx - K_PP * S_.sx, x1 = S_.mx + K_PP * S_.sx, y0 = S_.my - K_PP * S_.sy, y1 = S_.my + K_PP * S_.sy;
+        ctx.fillStyle = CL[c].c; ctx.globalAlpha = a; ctx.fillRect(f.sx(x0), f.y0 + f.ph - 6 - c * 7, (f.sx(x1) - f.sx(x0)), 5); ctx.fillRect(f.x0 + 2 + c * 7, f.sy(y1), 5, f.sy(y0) - f.sy(y1)); ctx.globalAlpha = 1;
+        if (s >= 2) { var inside = s >= 4 && ppInfo(x, y).cand.indexOf(c) >= 0; ctx.strokeStyle = CL[c].c; ctx.lineWidth = inside ? 3.5 : 1.8; ctx.globalAlpha = s === 2 ? t : 1; ctx.strokeRect(f.sx(x0), f.sy(y1), f.sx(x1) - f.sx(x0), f.sy(y0) - f.sy(y1)); if (inside) { ctx.globalAlpha = .15; ctx.fillStyle = CL[c].c; ctx.fillRect(f.sx(x0), f.sy(y1), f.sx(x1) - f.sx(x0), f.sy(y0) - f.sy(y1)); } ctx.globalAlpha = 1; }
+      });
+    }
+    /* Pixel desconhecido e relações */
+    if (s >= testAt) {
+      var tp = s === testAt ? t : 1;
+      if (m === 'md' && s >= 3 && s < regAt) { var best = mdPred(x, y); CL.forEach(function (_, c) { var S_ = ST[c], fr = s === 3 ? t : 1, ex = px + (f.sx(S_.mx) - px) * fr, ey = py + (f.sy(S_.my) - py) * fr; ctx.strokeStyle = CL[c].c; ctx.lineWidth = s >= 4 && c === best ? 4 : 1.6; ctx.globalAlpha = s >= 4 && c !== best ? .35 : 1; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(ex, ey); ctx.stroke(); ctx.globalAlpha = 1; if (fr > .6) { ctx.fillStyle = ink; ctx.font = '11px "IBM Plex Mono", monospace'; ctx.textAlign = 'center'; ctx.fillText(nf(eucl(c, x, y), 1), (px + ex) / 2, (py + ey) / 2 - 4); } }); }
+      if (m === 'pp' && s >= 3 && s < regAt) { ctx.setLineDash([4, 4]); ctx.strokeStyle = ink; ctx.lineWidth = 1.2; ctx.globalAlpha = s === 3 ? t : 1; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, f.y0 + f.ph); ctx.moveTo(px, py); ctx.lineTo(f.x0, py); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }
+      if (m === 'ml' && s >= 3 && s < regAt) { var pr = mlLik(x, y), bc = mlPred(x, y); CL.forEach(function (_, c) { ctx.strokeStyle = CL[c].c; ctx.lineWidth = s >= 4 && c === bc ? 3.5 : 1.4; ctx.globalAlpha = s >= 4 && c !== bc ? .4 : .95; ctx.setLineDash([2, 3]); var mh = maha(c, x, y); if (mh < 12) ellipse(ctx, f, c, mh, s === 3 ? t : 1); ctx.setLineDash([]); ctx.globalAlpha = 1; });
+        if (s >= 5) { var dm = mdPred(x, y); if (dm !== bc) { ctx.setLineDash([6, 5]); ctx.strokeStyle = CL[dm].c; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(f.sx(ST[dm].mx), f.sy(ST[dm].my)); ctx.stroke(); ctx.setLineDash([]); } } }
+      if (m === 'knn' && s >= 2 && s < regAt) { var I2 = knnInfo(x, y), R2 = I2.R * 1.03 * (s === 2 ? t : 1); ctx.strokeStyle = ink; ctx.lineWidth = 1.6; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.ellipse(px, py, Math.max(.1, R2 * f.pw / BMAX[BX]), Math.max(.1, R2 * f.ph / BMAX[BY]), 0, 0, 6.2832); ctx.stroke(); ctx.setLineDash([]);
+        if (s >= 3) I2.nb.forEach(function (n, k) { var q = TS[n.i], fr = s === 3 ? Math.max(0, Math.min(1, t * 5 - k)) : 1; if (fr <= 0) return; ctx.strokeStyle = CL[q.c].c; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + (f.sx(q.x) - px) * fr, py + (f.sy(q.y) - py) * fr); ctx.stroke(); }); }
+      var res = finalClass();
+      var fillC = (s >= decideAt() && res >= 0) ? CL[res].c : cssv('--surface');
+      ctx.globalAlpha = tp; ctx.fillStyle = fillC; ctx.strokeStyle = ink; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(px, py, 9 * (0.4 + 0.6 * tp), 0, 6.2832); ctx.fill(); ctx.stroke();
+      ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(px - 14, py); ctx.lineTo(px - 10, py); ctx.moveTo(px + 10, py); ctx.lineTo(px + 14, py); ctx.moveTo(px, py - 14); ctx.lineTo(px, py - 10); ctx.moveTo(px, py + 10); ctx.lineTo(px, py + 14); ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
+  function decideAt() { return { md: 4, pp: 5, ml: 4, knn: 4, rf: 5 }[st.m]; }
+  function finalClass() { var x = st.x, y = st.y; return { md: mdPred, pp: function () { return ppInfo(x, y).res; }, ml: mlPred, knn: knnPred, rf: rfPred }[st.m](x, y); }
+  /* Painel lateral */
+  function treeSVG(tree, x, y, active) {
+    var W = 320, H = 150, onPath = active ? path(tree, x, y) : [], NSn = 'http://www.w3.org/2000/svg';
+    function px(n) { return (n.pos + .5) / Math.pow(2, n.depth) * W; } function py(n) { return 18 + n.depth * 40; }
+    var h = '<svg class="tree-svg" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Árvore de decisão">';
+    (function walk(n) { if (n.leaf) return; [n.l, n.r].forEach(function (ch, k) { var on = onPath.indexOf(n) >= 0 && onPath.indexOf(ch) >= 0; h += '<line x1="' + px(n) + '" y1="' + (py(n) + 8) + '" x2="' + px(ch) + '" y2="' + (py(ch) - 9) + '" style="stroke:' + (on ? 'var(--accent)' : 'var(--line)') + ';stroke-width:' + (on ? 3 : 1.2) + '"/>' + '<text x="' + ((px(n) + px(ch)) / 2 + (k ? 6 : -6)) + '" y="' + ((py(n) + py(ch)) / 2) + '" text-anchor="' + (k ? 'start' : 'end') + '" style="fill:var(--muted);font-size:9px">' + (k ? 'não' : 'sim') + '</text>'; walk(ch); }); })(tree);
+    (function walk(n) { var on = onPath.indexOf(n) >= 0, cx = px(n), cy = py(n);
+      if (n.leaf) h += '<rect x="' + (cx - 17) + '" y="' + (cy - 9) + '" width="34" height="18" rx="4" style="fill:' + CL[n.cls].c + ';stroke:' + (on ? 'var(--ink)' : 'none') + ';stroke-width:2.5"/>';
+      else { h += '<rect x="' + (cx - 34) + '" y="' + (cy - 9) + '" width="68" height="18" rx="4" style="fill:var(--surface);stroke:' + (on ? 'var(--accent)' : 'var(--line)') + ';stroke-width:' + (on ? 2.5 : 1) + '"/><text x="' + cx + '" y="' + (cy + 3.5) + '" text-anchor="middle">' + BANDS[n.f ? BY : BX] + ' ≤ ' + nf(n.t, 1) + '</text>'; walk(n.l); walk(n.r); } })(tree);
+    return h + '</svg>';
+  }
+  function side() {
+    var m = st.m, s = st.step, x = st.x, y = st.y, h = '', tree = '';
+    $('an-side-title').textContent = M[m].side; $('an-note').textContent = M[m].note;
+    if (m === 'md') { if (s >= 3) { var d = CL.map(function (_, c) { return eucl(c, x, y); }), b = mdPred(x, y), mx = Math.max.apply(null, d); h = bars(d, function (v) { return nf(v, 1); }, s >= 4 ? b : -1, mx); } }
+    if (m === 'pp') { if (s >= 4) { var I = ppInfo(x, y); h = '<table class="ppcheck"><thead><tr><th>Classe</th><th>B04</th><th>B08</th><th>Caixa</th></tr></thead><tbody>' + I.r.map(function (q, c) { return '<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:' + CL[c].c + '"></span>' + CL[c].n + '</td><td>' + (q.ix ? '✓' : '✗') + '</td><td>' + (q.iy ? '✓' : '✗') + '</td><td><strong>' + (q.ix && q.iy ? 'dentro' : '—') + '</strong></td></tr>'; }).join('') + '</tbody></table>'; } else if (s >= 1) h = '<p class="small muted">Intervalos μ ± 2σ: ' + CL.map(function (_, c) { return CL[c].n + ' B04 ' + nf(ST[c].mx - 2 * ST[c].sx, 1) + '–' + nf(ST[c].mx + 2 * ST[c].sx, 1); }).join('; ') + '.</p>'; }
+    if (m === 'ml') { if (s >= 3) { var mh = CL.map(function (_, c) { return maha(c, x, y); }); h = '<p class="small muted" style="margin:0 0 4px">Distância de Mahalanobis (em desvios): ' + mh.map(function (v, c) { return CL[c].n.split(' ')[0] + ' ' + nf(v, 1); }).join(' · ') + '</p>'; }
+      if (s >= 4) { var p = mlLik(x, y); h += bars(p.map(function (v) { return v * (s === 4 ? ease(st.t) : 1); }), function (v) { return pct(v, 0); }, mlPred(x, y), 1); } }
+    if (m === 'knn') { if (s >= 3) { var I2 = knnInfo(x, y), shown = s === 3 ? Math.round(ease(st.t) * 5) : 5, v = [0, 0, 0, 0, 0]; I2.nb.slice(0, shown).forEach(function (n) { v[TS[n.i].c]++; }); h = bars(v, function (q) { return q + ' voto' + (q === 1 ? '' : 's'); }, s >= 4 ? I2.res : -1, 5); } }
+    if (m === 'rf') { var ti = s <= 2 ? 0 : s === 3 ? 1 : s === 4 ? 2 : -1; if (s >= 1 && ti >= 0) tree = '<p class="small" style="margin:6px 0 0"><strong>Árvore ' + (ti + 1) + '</strong> (sim = segue à esquerda)</p>' + treeSVG(TREES[ti], x, y, s >= 2);
+      if (s >= 2) { var vv = [0, 0, 0, 0, 0], upto = s >= 5 ? 3 : s - 1; TREES.slice(0, upto).forEach(function (t) { var pp = path(t, x, y); vv[pp[pp.length - 1].cls]++; }); h = bars(vv, function (q) { return q + ' voto' + (q === 1 ? '' : 's'); }, s >= 5 ? rfPred(x, y) : -1, 3); } }
+    if (s >= decideAt()) { var r = finalClass(); h += '<p class="anim-result">Resultado: <strong style="color:' + (r >= 0 ? CL[r].c : 'var(--no)') + '">' + name(r) + '</strong></p>'; }
+    $('an-side').innerHTML = h || '<p class="small muted">Os valores aparecem quando o pixel desconhecido entra na análise.</p>'; $('an-tree').innerHTML = tree;
+  }
+  function caption() { var n = M[st.m].steps.length; $('an-cap').innerHTML = '<b class="stepn">' + (st.step + 1) + '/' + n + '</b>' + M[st.m].steps[st.step](); $('an-dots').innerHTML = M[st.m].steps.map(function (_, i) { return '<i class="' + (i <= st.step ? 'on' : '') + '"></i>'; }).join(''); }
+  function render() { plot.render(); side(); caption(); }
+  /* Reprodução */
+  function tween(done) { cancelAnimationFrame(st.raf); if (reduce) { st.t = 1; render(); if (done) done(); return; } var t0 = performance.now(), D = 850; st.t = 0; (function fr(now) { st.t = Math.min(1, (now - t0) / D); render(); if (st.t < 1) st.raf = requestAnimationFrame(fr); else if (done) done(); })(t0); }
+  function go(i, done) { st.step = Math.max(0, Math.min(M[st.m].steps.length - 1, i)); tween(done); }
+  function stop() { st.playing = false; clearTimeout(st.timer); $('an-play').textContent = '▶ Reproduzir'; }
+  function play() {
+    if (st.playing) { stop(); return; }
+    st.playing = true; $('an-play').textContent = '⏸ Pausar';
+    if (st.step >= M[st.m].steps.length - 1) st.step = -1;
+    (function next() { if (!st.playing) return; if (st.step >= M[st.m].steps.length - 1) { stop(); return; } go(st.step + 1, function () { st.timer = setTimeout(next, 1900); }); })();
+  }
+  segGroup($('seg-anim'), function (v) { stop(); st.m = v; st.step = 0; go(0); });
+  $('an-play').addEventListener('click', play);
+  $('an-next').addEventListener('click', function () { stop(); go(st.step + 1); });
+  $('an-prev').addEventListener('click', function () { stop(); go(st.step - 1); });
+  $('an-reset').addEventListener('click', function () { stop(); go(0); });
+  document.querySelectorAll('[data-ex]').forEach(function (b) { b.addEventListener('click', function () { var e = EX[b.dataset.ex]; st.x = e[0]; st.y = e[1]; render(); }); });
+  $('sc-anim').addEventListener('click', function (e) { var r = this.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top, m = plot.m; var x = (mx - m.l) / (plot.w - m.l - m.r) * BMAX[BX], y = (plot.h - m.b - my) / (plot.h - m.t - m.b) * BMAX[BY]; if (x < 0 || y < 0 || x > BMAX[BX] || y > BMAX[BY]) return; st.x = x; st.y = y; render(); });
+  render();
+  return { render: render };
+})();
+
+/* K-médias: reprodução automática */
+(function () {
+  var timer = null, btn = $('km-play');
+  function stopKm() { clearInterval(timer); timer = null; btn.textContent = '▶ Reproduzir animação'; }
+  btn.addEventListener('click', function () {
+    if (timer) { stopKm(); return; }
+    if (km.it > 0) kmReset();
+    btn.textContent = '⏸ Pausar';
+    timer = setInterval(function () { var chg = kmStep(); kmDraw(); if (chg === 0 || km.it > 60) stopKm(); }, 900);
+  });
+  $('km-reset').addEventListener('click', stopKm); $('sl-k').addEventListener('input', stopKm);
+})();
 
 /* ---------- Estado inicial ---------- */
 showParams();

@@ -33,6 +33,27 @@ select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);b
 .sigbars b{font-family:var(--font-mono);font-weight:500;font-size:.8rem}
 .algo-info{min-height:6.5em}
 .algo-info .eq{font-family:var(--font-mono);font-size:.9rem;display:block;margin-top:6px;overflow-x:auto;white-space:nowrap}
+.anim-ctrl{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.anim-ctrl .btn{min-width:42px}
+.anim-dots{display:inline-flex;gap:4px;margin:0 8px}
+.anim-dots i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block;transition:background .2s}
+.anim-dots i.on{background:var(--accent)}
+.anim-cap{min-height:3.2em;font-size:1.02rem;background:var(--accent-soft);border-left:3px solid var(--accent);padding:10px 14px;border-radius:0 8px 8px 0;margin:0}
+.anim-cap b.stepn{font-family:var(--font-mono);font-weight:500;color:var(--accent);margin-right:6px}
+.anim-side-title{margin:0;font-family:var(--font-display);font-stretch:85%;font-size:1.05rem}
+.abars{display:grid;gap:6px}
+.abars .r{display:grid;grid-template-columns:8.5em minmax(0,1fr) 4.2em;gap:8px;align-items:center;font-size:.88rem}
+.abars .r.win{font-weight:700}
+.abars .track{height:12px;background:var(--surface-2);border-radius:3px;overflow:hidden}
+.abars .fill{height:100%;border-radius:3px;transition:width .35s}
+.abars .v{font-family:var(--font-mono);text-align:right;font-size:.82rem}
+.abars .r.dim{opacity:.45}
+.anim-result{margin-top:8px;font-size:.95rem}
+.ppcheck{border-collapse:collapse;width:100%;font-size:.86rem}
+.ppcheck td,.ppcheck th{padding:4px 6px;border-bottom:1px solid var(--line);text-align:center}
+.ppcheck td:first-child,.ppcheck th:first-child{text-align:left}
+.tree-svg{width:100%;height:auto;display:block;margin-top:6px}
+.tree-svg text{font-family:"IBM Plex Mono",monospace;font-size:10px;fill:var(--ink)}
 .matrix{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.88rem;width:100%}
 .matrix th,.matrix td{padding:6px 7px;text-align:right;border:1px solid var(--line);text-transform:none;letter-spacing:0}
 .matrix th{font-family:var(--font-body);font-size:.8rem;color:var(--muted);font-weight:600;background:var(--surface-2)}
@@ -85,10 +106,10 @@ select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);b
         <li><a href="#mapa"><span class="n">1</span><span>Da imagem ao mapa temático</span><span class="sl">s. 3–5</span></a></li>
         <li><a href="#atributos"><span class="n">2</span><span>Espaço de atributos e separabilidade</span><span class="sl">s. 6–7</span></a></li>
         <li><a href="#kmedias"><span class="n">3</span><span>Não supervisionada: K-médias</span><span class="sl">s. 8–9</span></a></li>
-        <li><a href="#supervisionada"><span class="n">4</span><span>Supervisionada: amostras e algoritmos</span><span class="sl">s. 10–14</span></a></li>
-        <li><a href="#objeto"><span class="n">5</span><span>Pixel e objeto (GEOBIA)</span><span class="sl">s. 15</span></a></li>
-        <li><a href="#acuracia"><span class="n">6</span><span>Avaliação da acurácia</span><span class="sl">s. 16–17</span></a></li>
-        <li><a href="#pratica"><span class="n">7</span><span>Atividade prática no QGIS com o dzetsaka</span><span class="sl">s. 20–22</span></a></li>
+        <li><a href="#supervisionada"><span class="n">4</span><span>Supervisionada: algoritmos passo a passo</span><span class="sl">s. 10–19</span></a></li>
+        <li><a href="#objeto"><span class="n">5</span><span>Pixel e objeto (GEOBIA)</span><span class="sl">s. 20</span></a></li>
+        <li><a href="#acuracia"><span class="n">6</span><span>Avaliação da acurácia</span><span class="sl">s. 21–22</span></a></li>
+        <li><a href="#pratica"><span class="n">7</span><span>Atividade prática no QGIS com o dzetsaka</span><span class="sl">s. 25–27</span></a></li>
       </ol>
     </nav>
   </div>
@@ -179,6 +200,7 @@ select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);b
         <div class="ctrl" style="min-width:200px;flex:1"><label for="sl-k">Número de grupos (k) <output id="o-k">5</output></label><input type="range" id="sl-k" min="2" max="8" value="5"></div>
         <button class="btn" id="km-reset">Sortear novos centros</button>
         <button class="btn primary" id="km-step">Próxima iteração</button>
+        <button class="btn" id="km-play">▶ Reproduzir animação</button>
         <button class="btn" id="km-run">Executar até convergir</button>
       </div>
       <div class="viz">
@@ -198,13 +220,48 @@ select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);b
 
 <!-- ============ 4. SUPERVISIONADA ============ -->
 <section class="step" id="supervisionada">
-  <div class="step-head"><span class="step-n">4</span><div><p class="eyebrow">Slides 10 a 14</p><h2>Classificação supervisionada: amostras e algoritmos</h2></div></div>
+  <div class="step-head"><span class="step-n">4</span><div><p class="eyebrow">Slides 10 a 19</p><h2>Classificação supervisionada: amostras e algoritmos</h2></div></div>
   <dl class="keys">
     <div><dt>Representatividade</dt><dd>Cobrir a variação interna de cada classe.</dd></div>
     <div><dt>Quantidade</dt><dd>Pixels suficientes para estimar médias e covariâncias.</dd></div>
     <div><dt>Distribuição e pureza</dt><dd>Amostras espalhadas pela cena, longe de bordas e pixels mistos.</dd></div>
     <div><dt>Independência</dt><dd>Amostras de treinamento separadas das de validação.</dd></div>
   </dl>
+
+  <div class="block">
+    <div class="panel">
+      <div class="panel-title"><h3>Como cada método decide: animação passo a passo</h3><span class="eyebrow">B04 × B08 · 10 amostras por classe</span></div>
+      <p class="small muted">Escolha um método e reproduza a animação, ou avance passo a passo. Clique no gráfico para colocar o pixel desconhecido em outra posição e repetir o raciocínio.</p>
+      <div class="seg" role="group" aria-label="Método animado" id="seg-anim">
+        <button data-v="md" aria-pressed="true">Distância mínima</button>
+        <button data-v="pp" aria-pressed="false">Paralelepípedo</button>
+        <button data-v="ml" aria-pressed="false">Máxima verossimilhança</button>
+        <button data-v="knn" aria-pressed="false">k-NN</button>
+        <button data-v="rf" aria-pressed="false">Random Forest</button>
+      </div>
+      <div class="anim-ctrl">
+        <button class="btn" id="an-reset" aria-label="Voltar ao início">⏮</button>
+        <button class="btn" id="an-prev" aria-label="Passo anterior">◀</button>
+        <button class="btn primary" id="an-play">▶ Reproduzir</button>
+        <button class="btn" id="an-next" aria-label="Próximo passo">▶|</button>
+        <span class="anim-dots" id="an-dots" aria-hidden="true"></span>
+        <span class="small muted">Pixel de exemplo:</span>
+        <button class="chip" data-ex="amb">entre solo e área construída</button>
+        <button class="chip" data-ex="misto">misto (água e vegetação)</button>
+        <button class="chip" data-ex="tip">típico de vegetação densa</button>
+      </div>
+      <p class="anim-cap" id="an-cap" aria-live="polite"></p>
+      <div class="viz">
+        <div><canvas id="sc-anim" class="plot" aria-label="Animação do método no espaço de atributos; clique para mover o pixel desconhecido"></canvas></div>
+        <div>
+          <h4 class="anim-side-title" id="an-side-title"></h4>
+          <div id="an-side"></div>
+          <div id="an-tree"></div>
+          <p class="note" id="an-note"></p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="block">
     <div class="panel">
@@ -279,7 +336,7 @@ select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);b
 
 <!-- ============ 5. OBJETO ============ -->
 <section class="step" id="objeto">
-  <div class="step-head"><span class="step-n">5</span><div><p class="eyebrow">Slide 15</p><h2>Pixel e objeto (GEOBIA)</h2></div></div>
+  <div class="step-head"><span class="step-n">5</span><div><p class="eyebrow">Slide 20</p><h2>Pixel e objeto (GEOBIA)</h2></div></div>
   <div class="prose"><p>Na classificação por pixel, cada pixel é decidido isoladamente, e o ruído produz o efeito “sal e pimenta”. Na análise baseada em objetos, a imagem é primeiro segmentada em regiões contíguas e espectralmente homogêneas; a classificação é então aplicada a cada objeto (BLASCHKE, 2010).</p></div>
   <div class="block">
     <div class="panel">
@@ -310,7 +367,7 @@ select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);b
 
 <!-- ============ 6. ACURÁCIA ============ -->
 <section class="step" id="acuracia">
-  <div class="step-head"><span class="step-n">6</span><div><p class="eyebrow">Slides 16 e 17</p><h2>Avaliação da acurácia</h2></div></div>
+  <div class="step-head"><span class="step-n">6</span><div><p class="eyebrow">Slides 21 e 22</p><h2>Avaliação da acurácia</h2></div></div>
   <div class="prose"><p>A matriz de confusão cruza, para cada pixel avaliado, a classe atribuída pelo classificador (linhas) com a classe de referência (colunas); é a base da avaliação da acurácia de classificações (CONGALTON, 1991). A diagonal reúne os acertos; os demais valores, as confusões entre classes.</p></div>
   <div class="block">
     <div class="panel">
@@ -352,12 +409,12 @@ select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);b
 
 <!-- ============ 7. PRÁTICA ============ -->
 <section class="step" id="pratica">
-  <div class="step-head"><span class="step-n">7</span><div><p class="eyebrow">Slides 20, 21 e 22</p><h2>Atividade prática no QGIS com o dzetsaka</h2></div></div>
+  <div class="step-head"><span class="step-n">7</span><div><p class="eyebrow">Slides 25, 26 e 27</p><h2>Atividade prática no QGIS com o dzetsaka</h2></div></div>
   <div class="prose"><p>A atividade reutiliza a cena Sentinel-2 L2A baixada no Dia 1. O dzetsaka é um complemento de classificação para o QGIS (KARASIAK, 2016) que recebe um raster e uma camada vetorial de amostras com campo numérico de classe. O algoritmo GMM (modelo gaussiano por classe, princípio próximo ao da máxima verossimilhança) funciona sem dependências; Random Forest, SVM e KNN exigem a biblioteca scikit-learn.</p></div>
   <div class="block">
     <div class="cols-3" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
       <div class="panel">
-        <div class="panel-title"><h3>1. Preparar imagem e amostras</h3><span class="eyebrow">Slide 20</span></div>
+        <div class="panel-title"><h3>1. Preparar imagem e amostras</h3><span class="eyebrow">Slide 25</span></div>
         <div class="progress" aria-hidden="true"><span id="pg-a"></span></div>
         <ol class="check" id="ck-a">
           <li><input type="checkbox" id="a-1"><span class="n">1</span><label for="a-1">Reabrir a cena Sentinel-2 L2A do Dia 1 (pasta R10m).</label></li>
@@ -370,7 +427,7 @@ select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);b
         <p class="note">O dzetsaka não aceita rótulos de texto no campo de classe.</p>
       </div>
       <div class="panel">
-        <div class="panel-title"><h3>2. Classificar com o dzetsaka</h3><span class="eyebrow">Slide 21</span></div>
+        <div class="panel-title"><h3>2. Classificar com o dzetsaka</h3><span class="eyebrow">Slide 26</span></div>
         <div class="progress" aria-hidden="true"><span id="pg-b"></span></div>
         <ol class="check" id="ck-b">
           <li><input type="checkbox" id="b-1"><span class="n">1</span><label for="b-1">Instalar o complemento dzetsaka (Complementos › Gerenciar e Instalar Complementos).</label></li>
@@ -382,7 +439,7 @@ select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);b
         <p class="warnbox small">Nomes de menus e opções variam entre versões do dzetsaka: conferir na versão instalada. Quando falta uma dependência, versões recentes oferecem instalá-la automaticamente.</p>
       </div>
       <div class="panel">
-        <div class="panel-title"><h3>3. Avaliar e pós-processar</h3><span class="eyebrow">Slide 22</span></div>
+        <div class="panel-title"><h3>3. Avaliar e pós-processar</h3><span class="eyebrow">Slide 27</span></div>
         <div class="progress" aria-hidden="true"><span id="pg-c"></span></div>
         <ol class="check" id="ck-c">
           <li><input type="checkbox" id="c-1"><span class="n">1</span><label for="c-1">Analisar a matriz de confusão: exatidão global, do produtor, do usuário e kappa.</label></li>
@@ -400,7 +457,7 @@ select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);b
 
 <!-- ============ SÍNTESE ============ -->
 <section class="step" id="sintese">
-  <div class="step-head"><span class="step-n" style="font-size:2.2rem">Σ</span><div><p class="eyebrow">Slides 18, 19 e 23</p><h2>Síntese e discussão</h2></div></div>
+  <div class="step-head"><span class="step-n" style="font-size:2.2rem">Σ</span><div><p class="eyebrow">Slides 23, 24 e 28</p><h2>Síntese e discussão</h2></div></div>
   <div class="flow">
     <div><b>Separabilidade</b><span class="muted small">A classificação converte reflectâncias em classes a partir da separação das nuvens no espaço de atributos.</span></div>
     <div><b>Duas abordagens</b><span class="muted small">A não supervisionada agrupa; a supervisionada aprende com amostras.</span></div>
@@ -416,7 +473,7 @@ select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);b
 
 <!-- ============ REFERÊNCIAS ============ -->
 <section class="step" id="referencias">
-  <div class="step-head"><span class="step-n" style="font-size:2.2rem">§</span><div><p class="eyebrow">Slide 24 · ABNT NBR 6023</p><h2>Referências</h2></div></div>
+  <div class="step-head"><span class="step-n" style="font-size:2.2rem">§</span><div><p class="eyebrow">Slide 29 · ABNT NBR 6023</p><h2>Referências</h2></div></div>
   <div class="refs">
     <p>BLASCHKE, T. Object based image analysis for remote sensing. <strong>ISPRS Journal of Photogrammetry and Remote Sensing</strong>, v. 65, n. 1, p. 2-16, 2010. DOI: 10.1016/j.isprsjprs.2009.06.004.</p>
     <p>BREIMAN, L. Random forests. <strong>Machine Learning</strong>, v. 45, n. 1, p. 5-32, 2001. DOI: 10.1023/A:1010933404324.</p>
